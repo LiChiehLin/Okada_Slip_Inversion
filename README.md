@@ -128,3 +128,6 @@ okOutputGMT(SlipModel,'displ', ...
 
 #### Fault slip
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/3961e537622757f0c652d0debde8539f9c841fda/Figure/TotalSlip.png)
+
+#### Residual
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/fb2534304298bb9a75073b6fe4a66491950c619b/Figure/Residual.png)
