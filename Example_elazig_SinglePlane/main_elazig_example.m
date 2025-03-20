@@ -1,10 +1,9 @@
 clear
 %% okLoadData.m
-datadir = 'elazig';
-Displname = strcat(datadir,'/','UnwrapPhase.tif');
-Aziname = strcat(datadir,'/','Azimuth.tif');
-Incname = strcat(datadir,'/','Incidence.tif');
-Cohname = strcat(datadir,'/','Coherence.tif');
+Displname = 'UnwrapPhase.tif';
+Aziname = 'Azimuth.tif';
+Incname = 'Incidence.tif';
+Cohname = 'Coherence.tif';
 
 DataStruct = okLoadData('Displacement',Displname, ...
     'Azimuth',Aziname, ...
