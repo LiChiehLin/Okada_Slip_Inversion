@@ -7,7 +7,7 @@ The basic workflow is as follows:
   
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/7feebc821cd85102756997bff945e8ab1af74999/Figure/Workflow.png)
 
-## Below is an example for 2020 Mw 6.8 Elazig earthquake
+## Below is an example for [2020 Mw 6.8 Elazig earthquake](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/24275589c24899d169ea9e3841b004c4a88fe686/Example_elazig_SinglePlane)
 1. Convert ISCE product to Matlab readable GeoTiff using GDAL tools:
 ```sh
 gdal_translate -b 2 filt_topophase.unw.geo UnwrapPhase.tif
