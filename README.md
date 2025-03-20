@@ -122,6 +122,8 @@ okOutputGMT(SlipModel,'displ', ...
     'n',5);
 ```
 
+---
+
 ### Results:
 #### L-curve:
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/68a1fd2796768bbd04747121af4c791c03af7305/Figure/Lcurve.png)
