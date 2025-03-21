@@ -133,6 +133,53 @@ DataStruct = okDsample(DataStruct,'Subset',DsampleParam);
 ```
 ---
 
+### 6. okMakeFaultModel.m
+* #### To make the fault geometry
+#### Positional input:
+* StartXYZ: ***Vector.***: Input the coordinate of the starting point of the fault patch
+* Length: ***Numeric.***: Input the length of the fault
+* Width: ***Numeric.***: Input the width (down-dip) of the fault
+* Strike: ***Numeric.***: Input the strike of the fault (Right-hand rule)
+* Dip: ***Numeric.***: Input the dip of the fault (Right-hand rule)
+* PatchStrike: ***Numeric.***: Input the along-strike patch count
+* PatchDip: ***Numeric.***: Input the along-dip patch count
+```matlab
+StartXYZ = [359099, 4253530, 0];
+Length = 60000;
+Width = 20000;
+Strike = 242;
+Dip = 80;
+PatchStrike = 24;
+PatchDip = 8;
+FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,PatchDip);
+```
 
+### 7. okMakeGreenFunc.m
+* #### TO make the Okada Green's function
+#### Positional input:
+* DataStruct: ***Structure.*** Input DataStruct
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* Direction: ***Character.*** Input which direction the Green's function is converted to
+  * 'LOS': Convert to LOS direction based on the geometry in `DataStruct`
+  * 'Azi': Convert to azimuth direction based on the geometry in `DataStruct`
+  * '3D': Remain the Green's function in EW, NS and UD
+* FaultModel: ***Structure.*** Input the FaultModel
+* Rake: ***Numeric.*** Input the rake angle
+  * Left-lateral: 0
+  * Right-lateral: 180
+  * Thrust: 90
+  * Normal: -90
+* Slip: ***Numeric.*** Input how much it slips (It can be zero to assume no slip in this rake direction)
+* Opening: ***Numeric.*** Input how much tensile opening it is (It can be zero to assume no opening as a common practice in slip inversion)
+* GreenFuncName. ***Character.*** Input the field name the Green's function is going to be stored in
+```matlab
+% Dip-slip
+RakeDS = -90;
+SlipDS = 1;
+FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeDS,SlipDS,0,'GreenDS');
 
-
+% Strike-slip
+RakeSS = 0;
+SlipSS = 1;
+FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS,0,'GreenSS');
+```
