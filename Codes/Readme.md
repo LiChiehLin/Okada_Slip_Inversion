@@ -81,12 +81,58 @@ DataStruct = okMakeDataSubset(DataStruct,'Original',rmin,rmax,cmin,cmax);
 ### 4. okLLtoLocalXY.m
 * #### To convert longitude and latitude to local XY coordinates given a longitude origin
 #### Positional input:
-* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* DataStruct: ***Structure.*** Input DataStruct
 * Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
 * lon_origin: ***Numeric.*** Input the longitude origin for conversion
-```matalb
+```matlab
 % After okMakeDataSubset.m, there is a new field called 'Subset' that contains the subset of your data
 lon_origin = 38;
 DataStruct = okLLtoLocalXY(DataStruct,'Subset',lon_origin);
 ```
+---
+
+### 5. Down-sampling data 
+To down-sample the data using quadtree algorithm.  
+This will be a trial-and-error process until you find the best downsampled results for your case.  
+
+- ### okMakeDsampleParam.m  
+Make the parameter structure for `okDsample.m`
+
+#### Positional input:
+* FuncType: ***Character.*** Input the downsampling algorithm. (Right now only supports quadtree)
+#### Name-Value pairs:
+* 'Criterion': ***Character.*** Input the quadtree criterion ['variance' or 'curvature']
+  * variance: Method used in Jonsson (2002)
+  * curvature: Method used in Simons et al. (2002)
+* 'Tolerance': ***Numeric.*** Input the variance threshold in each leaf
+* 'LeafMinSize': ***Numeric.*** Input the minimum size 1 leaf can be
+* 'LeafMaxSize': ***Numeric.*** Input the maximum size 1 leaf can be
+* 'NaNPixelAllow': ***Numeric.*** Input the maximum NaN pixel ration 1 leaf can have
+
+- ### okDsample.m
+Calls the downsampling algorithm based on the parameters made in `okMakeDsampleParam.m`
+
+#### Positional input:
+* DataStruct: ***Structure.*** Input DataStruct
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* FuncParam: ***Structure.*** Input the parameter structure made in `okMakeDsampleParam.m`
+
+- ### okQuadtreeD.m
+Recursive function that operates the quadtree downsampling
+
+```matlab
+% Make the downsample parameter structure
+DsampleParam = okMakeDsampleParam('quadtree', ...
+    'Criterion','curvature', ...
+    'Tolerance',0.00007, ...
+    'LeafMinSize',1000, ...
+    'LeafMaxSize',200000, ...
+    'NaNPixelAllow',0.5);
+% Downsample the data based on the selected algorithm 
+DataStruct = okDsample(DataStruct,'Subset',DsampleParam);
+```
+---
+
+
+
 
