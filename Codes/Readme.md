@@ -76,5 +76,17 @@ cmin = 1;
 cmax = 4926;
 DataStruct = okMakeDataSubset(DataStruct,'Original',rmin,rmax,cmin,cmax);
 ```
+---
 
+### 4. okLLtoLocalXY.m
+* #### To convert longitude and latitude to local XY coordinates given a longitude origin
+#### Positional input:
+* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* lon_origin: ***Numeric.*** Input the longitude origin for conversion
+```matalb
+% After okMakeDataSubset.m, there is a new field called 'Subset' that contains the subset of your data
+lon_origin = 38;
+DataStruct = okLLtoLocalXY(DataStruct,'Subset',lon_origin);
+```
 
