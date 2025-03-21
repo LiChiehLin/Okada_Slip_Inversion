@@ -153,6 +153,7 @@ PatchStrike = 24;
 PatchDip = 8;
 FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,PatchDip);
 ```
+---
 
 ### 7. okMakeGreenFunc.m
 * #### To make the Okada Green's function  
@@ -184,6 +185,7 @@ RakeSS = 0;
 SlipSS = 1;
 FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS,0,'GreenSS');
 ```
+---
 
 ### 8. okMakeSmoothMat.m
 * #### To make the smoothing matrix  
@@ -194,10 +196,11 @@ I am open to any smoother recommendations for future versions! Please let me kno
 ```matlab
 FaultModel = okMakeSmoothMat(FaultModel);
 ```
+---
 
 ### 9. okInvertSlip.m
 * #### To invert for the fault slip
-To correctly use this function, you will need a little basic linear algebra.  
+To correctly use this function, you will need a very basic linear algebra.  
 See below for different function input for different usages:
 #### Positional input:
 * DataStruct: ***Structure.***: Input DataStruct
@@ -211,9 +214,76 @@ See below for different function input for different usages:
   * lsq: Ordinary Least Squares
   * nnlsq: Non-negative Least Squares
 * 'smoothsearch': ***Vector.***: Input the search range of the smoothing constant (Leave blank to use the default one)
+  
+### Case 1: 1 LOS displacement, 2 Green's functions
+This is a very common case for InSAR users to invert for fault slip. Here's how the matrices should be placed and the way this function is designed:  
+  
+<p align="center">
+$$LOS$$ is the displacement </p>
+<p align="center">
+$$S$$ is the smoothing matrix </p>
+<p align="center">
+$$G_{DS}$$ is the dip-slip Green's function </p>
+<p align="center">
+$$G_{SS}$$ is the strike-slip Green's function </p>  
 
+And we are solving a linear system such that:
+<p align="center">
+$$d = Am$$ </p>
+where  
+<p align="center">
+$$d = \begin{bmatrix} LOS \\\ 0 \end{bmatrix}$$ $$A = \begin{bmatrix} G_{DS} & G_{SS} & 1 \\\ S & S & 0 \end{bmatrix}$$ </p>
 
+Here, the Green's functions are placed at matrix index `[11,12]`:  
+<p align="center">
+$$A_{index} = \begin{bmatrix} 11 & 12 & 13 \\\ 21 & 22 & 23 \end{bmatrix}$$  </p>
 
+`S` will be automatically extended in `okInvertSlip,m` so don't worry about it. Therefore, your funciton input should be:  
 
+```matlab
+SmoothParam = [0.00001,0.0001,0.001,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1,10];
+GreenFuncPosition = [11,12];
+SlipModel = okInvertSlip(DataStruct,'Dsample',FaultModel,{'GreenDS','GreenSS'},GreenFuncPosition,'SmoothMat', ...
+    'solver','nnlsq', ...
+    'smoothsearch',SmoothParam);
+```
 
+### Case 2: 2 LOS displacements, 2 Green's functions
+This is also a very common case for InSAR users to invert for fault slip where we have both ascending and descending observations
+It is very similiar as the above
+<p align="center">
+$$LOS_{Asc}$$ is the ascending displacement </p>
+<p align="center">
+$$LOS_{Des}$$ is the descending displacement </p>
+<p align="center">
+$$G_{AscDS}$$ is the ascending dip-slip Green's function </p>
+<p align="center">
+$$G_{AscSS}$$ is the ascending strike-slip Green's function </p>  
+<p align="center">
+$$G_{DesDS}$$ is the descending dip-slip Green's function </p>
+<p align="center">
+$$G_{DesSS}$$ is the descending strike-slip Green's function </p>  
+
+The linear system is placed as such:
+<p align="center">
+$$d = \begin{bmatrix} LOS_{Asc} \\\ LOS_{Des} \\\ 0 \end{bmatrix}$$ $$A = \begin{bmatrix} G_{AscDS} & G_{AscSS} & 1 \\\ G_{DesDS} & G_{DesSS} & 1 \\\ S & S & 0 \end{bmatrix}$$ </p>
+
+Here, the Green's functions are placed at matrix index `[11,12,21,22]` with corrspondence with the displacement `[11,21]`: 
+<p align="center">
+$$d_{index} = \begin{bmatrix} 11 \\\ 21 \\\ 31 \end{bmatrix}$$ $$A_{index} = \begin{bmatrix} 11 & 12 & 13 \\\ 21 & 22 & 23 \\\ 31 & 32 & 33 \end{bmatrix}$$  </p>
+Therefore, the function input will be:  
+
+```matlab
+SmoothParam = [0.00001,0.0001,0.001,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1,10];
+GreenFuncPosition = [11,12,21,22];
+SlipModel = okInvertSlip({DataStructAsc,DataStructDes},{'Dsample','Dsample'}, ...
+    FaultModel,{'GreenAscDS','GreenAscSS','GreenDesDS','GreenDesSS'},[11,12,21,22],'SmoothMat', ...
+    'solver','nnlsq', ...
+    'smoothsearch',SmoothParam);
+```
+
+### Case 3: 2 LOS displacements, 1 Green's function
+If you wish to only solve for fault slip at certain rake angle, please still input 2 Green's functions, just set the other one 0 when generating the Green's function  
+
+---
 
