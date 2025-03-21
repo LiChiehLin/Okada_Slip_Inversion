@@ -25,7 +25,7 @@ It is highly recommended to use this plotting function to have a look of the stu
   * '***Incidence***': Plot incidence angle (`DataStruct`)
   * '***FaultModel***': Plot the fault model (`FaultModel`), use with sub-option `'displ'`
   * '***Dsample***': Plot the downsample result (`DataStruct`)
-  * '***GreenFunc***': Plot the Okada Green's function (`FaultModel`), use with sub-option `'displ'`
+  * '***GreenFunc***': Plot the Okada Green's function (`FaultModel`), use with sub-options `'dset', 'displ'`
   * '***Smooth***': Plot the smoothing matrix (`FaultModel`)
   * '***Inversion***': Plot the inversion results (`SlipModel`), use with sub-options `'residual','slip1', 'slip2', 'totalslip', 'rake'`
 #### Name-Value pairs:
@@ -42,6 +42,46 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'slip2': ***Numeric.***: Input whether or not plot the second fault slip inversion, works with `FigType='Inversion'` (default: 0)
 * 'totalslip': ***Numeric.***: Input whether or not plot the total fault slip inversion, works with `FigType='Inversion'` (default: 0)
 * 'rake': ***Numeric.***: Input whether or not plot the rake inversion, works with `FigType='Inversion'` (default: 0)
+
+### FigType = '***Displ***' || '***Azimuth***' || '***Incidence***'
+```matlab
+okPlot(DataStruct.Original,'Displ')
+okPlot(DataStruct.Original,'Azimuth')
+okPlot(DataStruct.Original,'Incidence')
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/f5da938c535b9843ede1a9afa722191e5b1374cb/Figure/okPlot_DisplAziInc.png)
+### FigType = '***FaultModel***'
+```matlab
+okPlot(FaultModel,'FaultModel','displ',DataStruct.Subset)
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/f5da938c535b9843ede1a9afa722191e5b1374cb/Figure/okPlot_FaultModel.png)
+### FigType = '***Dsample***'
+```matlab
+okPlot(DataStruct,'Dsample','MarkerSize',20)
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/f5da938c535b9843ede1a9afa722191e5b1374cb/Figure/okPlot_Dsample.png)
+### FigType = '***GreenFunc***'
+```matlab
+okPlot(FaultModel,'GreenFunc','dset','GreenSS', ...
+    'displ',DataStruct.Dsample, ...
+    'MarkerSize',20)
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/f5da938c535b9843ede1a9afa722191e5b1374cb/Figure/okPlot_GreenFunc.png)
+### FigType = '***Smooth***'
+```matlab
+okPlot(FaultModel,'Smooth')
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/5dd3cffa3a7a4b8734354a4c1db6ed5e5acdc1e6/Figure/okPlot_Smooth.png)
+### FigType = '***Inversion***'
+If `'n'` is not specified, the function will plot a several inversion results to give a quick skim
+```matlab
+okPlot(SlipModel,'Inversion','slip1',1,'n',5,'title','Dip-slip')
+okPlot(SlipModel,'Inversion','slip2',1,'n',5,'title','Strike-slip')
+okPlot(SlipModel,'Inversion','totalslip',1,'n',5)
+okPlot(SlipModel,'Inversion','residual',1,'n',5,'MarkerSize',30)
+okPlot(SlipModel,'Inversion','lcurve',1,'n',5,'title','L-curve')
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/5dd3cffa3a7a4b8734354a4c1db6ed5e5acdc1e6/Figure/okPlot_Inversion.png)
 
 ---
 ### 1. okLoadData.m  
