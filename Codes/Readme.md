@@ -155,23 +155,24 @@ FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,Patch
 ```
 
 ### 7. okMakeGreenFunc.m
-* #### TO make the Okada Green's function
+* #### To make the Okada Green's function  
+Please be advised that the setting of the Green's function has a impact on fault slip inversion if using `Non-negative least squares` (as it forces all inversion result to be positive)  
 #### Positional input:
-* DataStruct: ***Structure.*** Input DataStruct
-* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
-* Direction: ***Character.*** Input which direction the Green's function is converted to
+* DataStruct: ***Structure.***: Input DataStruct
+* Dataset: ***Character.***: Input the field that contains the read-in displacement, azimuth ...
+* Direction: ***Character.***: Input which direction the Green's function is converted to
   * 'LOS': Convert to LOS direction based on the geometry in `DataStruct`
   * 'Azi': Convert to azimuth direction based on the geometry in `DataStruct`
   * '3D': Remain the Green's function in EW, NS and UD
-* FaultModel: ***Structure.*** Input the FaultModel
-* Rake: ***Numeric.*** Input the rake angle
+* FaultModel: ***Structure.***: Input the FaultModel
+* Rake: ***Numeric.***: Input the rake angle
   * Left-lateral: 0
   * Right-lateral: 180
   * Thrust: 90
   * Normal: -90
-* Slip: ***Numeric.*** Input how much it slips (It can be zero to assume no slip in this rake direction)
-* Opening: ***Numeric.*** Input how much tensile opening it is (It can be zero to assume no opening as a common practice in slip inversion)
-* GreenFuncName. ***Character.*** Input the field name the Green's function is going to be stored in
+* Slip: ***Numeric.***: Input how much it slips (It can be zero to assume no slip in this rake direction)
+* Opening: ***Numeric.***: Input how much tensile opening it is (It can be zero to assume no opening as a common practice in slip inversion)
+* GreenFuncName. ***Character.***: Input the field name the Green's function is going to be stored in
 ```matlab
 % Dip-slip
 RakeDS = -90;
@@ -183,3 +184,36 @@ RakeSS = 0;
 SlipSS = 1;
 FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS,0,'GreenSS');
 ```
+
+### 8. okMakeSmoothMat.m
+* #### To make the smoothing matrix  
+Currently there is only the 2D Laplacian smoother.  
+I am open to any smoother recommendations for future versions! Please let me know!  
+#### Positional input:
+* FaultModel: ***Structure.***: Input FaultModel
+```matlab
+FaultModel = okMakeSmoothMat(FaultModel);
+```
+
+### 9. okInvertSlip.m
+* #### To invert for the fault slip
+To correctly use this function, you will need a little basic linear algebra.  
+See below for different function input for different usages:
+#### Positional input:
+* DataStruct: ***Structure.***: Input DataStruct
+* Dataset: ***Character.***: Input the field that contains the read-in displacement, azimuth ...
+* FaultModel: ***Structure.***: Input the FaultModel
+* GreenFuncDataset: ***Character.***: Input the corrsponding Green's function's field name
+* GreenFuncPosition: ***Vector.***: Input where the Green's functions should be placed in the design matrix
+* SmoothMatDataset: ***Character.*** Input the smoothing matrix field name stored in `FaultModel` (This is to give freedom for users using different smoother other than 2D Laplacian)
+#### Name-Value pairs:
+* 'solver': ***Character.***: Input the inversion solver
+  * lsq: Ordinary Least Squares
+  * nnlsq: Non-negative Least Squares
+* 'smoothsearch': ***Vector.***: Input the search range of the smoothing constant (Leave blank to use the default one)
+
+
+
+
+
+
