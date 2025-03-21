@@ -39,3 +39,9 @@ DataStruct = okLoadData('Displacement','UnwrapPhase.tif', ...
     'Processor','ISCE', ...
     'LookDir','r');
 ```
+
+### 2. okMaskData.m
+* #### To mask data with coherence or a read-in matrix with the same size
+
+
+
