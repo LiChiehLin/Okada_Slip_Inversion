@@ -3,10 +3,10 @@
 ---
 All Matlab variables are the format of ***structure***. It should be rather straight-forward to modify datasets by replacing data with the correct field.  
 4 main data structures are used and created throughout the slip inversion:  
-* Displacement structure (e.g. DataStruct)
-* Fault model structure (e.g. FaultModel)
-* Slip model structure (e.g. SlipModel)
-* Downsample parameter structure (e.g. SmoothParam)
+* Displacement structure (e.g. `DataStruct`)
+* Fault model structure (e.g. `FaultModel`)
+* Slip model structure (e.g. `SlipModel`)
+* Downsample parameter structure (e.g. `SmoothParam`)
   
 A lot of the functions are designed as `Name-Value` pair inputs. Please refer to the following to see more.  
 Also, the structures are updated after each execution of the sub-routine, so set the ouput structure as the input as shown below.  
@@ -51,6 +51,7 @@ DataStruct = okLoadData('Displacement','UnwrapPhase.tif', ...
 * MaskCriterion: ***Matrix.*** Input the matrix to be used as the mask  
 #### Name-Value pairs:
 * 'Threshold': ***Numeric.*** Input the set threshold for `MaskCriterion` (Leave blank to assume `MaskCriterion` is already a mask)  
+This is designed this way if users have their own masks wanted to apply  
 ```matlab
 Threshold = 0.35;
 DataStruct = okMaskData(DataStruct,'Original','Displ',DataStruct.Original.Coherence, ...
@@ -286,4 +287,35 @@ SlipModel = okInvertSlip({DataStructAsc,DataStructDes},{'Dsample','Dsample'}, ..
 If you wish to only solve for fault slip at certain rake angle, please still input 2 Green's functions, just set the other one 0 when generating the Green's function  
 
 ---
+
+### 10. okOutputGMT.m
+* #### To output result in GMT plottable format along with a slip inversion report
+#### Positional input:
+* SlipModel: ***Structure.***: Input SlipModel
+* OutType: ***Character.***: Input the thing you want to output
+  * 'slip': The slip inversion. 4 files asscociated with this will be made:
+    * XXXX_Solution.txt: The inversion report
+    * XXXX_Slip1_GMT.txt: GMT plottable fault slip associated with the first Green's function input
+    * XXXX_Slip2_GMT.txt: GMT plottable fault slip associated with the second Green's function input
+    * XXXX_TotalSlip_GMT.txt: GMT plottable total fault slip
+  * 'lcurve': The L-curve search result
+  * 'displ': The displacement observation and forward results
+  * 'green': The Okada Green's function
+#### Name-Value pairs:
+* 'n': ***Numeric.***: Choose the slip inversion result (Based on the L-curve search)
+* 'o': ***Character.*** The ouput file name prefix. (Leave blank the prefix will be `okSlipResult`)
+
+```matlab
+okOutputGMT(SlipModel,'slip', ...
+    'n',5);
+okOutputGMT(SlipModel,'lcurve', ...
+    'n',5);
+okOutputGMT(SlipModel,'green', ...
+    'n',5);
+okOutputGMT(SlipModel,'displ', ...
+    'n',5);
+```
+
+
+
 
