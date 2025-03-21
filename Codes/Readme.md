@@ -8,7 +8,8 @@ All Matlab variables are the format of ***structure***. It should be rather stra
 * Slip model structure (e.g. SlipModel)
 * Downsample parameter structure (e.g. SmoothParam)
   
-A lot of the functions are designed as `Name-Value` pair inputs. Please refer to the following to see more.
+A lot of the functions are designed as `Name-Value` pair inputs. Please refer to the following to see more.  
+Also, the structures are updated after each execution of the sub-routine, so set the ouput structure as the input as shown below.  
 
 ---
  ### 1. okLoadData.m  
@@ -24,7 +25,7 @@ gdal_translate -b 2 los.rdr.geo Incidence.tif
 gdal_translate -b 2 topophase.cor.geo Coherence.tif
 ```
 After that, you can simply read them with the following. Note that **Coherence** is optional if you don't wish to mask your data with Coherence.  
-#### Name-value pairs:  
+#### Name-Value pairs:  
 * 'Displacement': ***Character or matrix.*** Input the displacement GeoTiff filename or an already read-in matrix
 * 'Azimuth': ***Character or matrix.*** Input the azimuth angle GeoTiff filename or an already read-in matrix
 * 'Incidence': ***Character or matrix.*** Input the incidence angle GeoTiff filename or an already read-in matrix
@@ -39,9 +40,41 @@ DataStruct = okLoadData('Displacement','UnwrapPhase.tif', ...
     'Processor','ISCE', ...
     'LookDir','r');
 ```
+---
 
 ### 2. okMaskData.m
-* #### To mask data with coherence or a read-in matrix with the same size
+* #### To mask data with coherence or a read-in matrix with the same size  
+#### Positional input:  
+* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* TobeMasked: ***Character.*** Input the field to be masked
+* MaskCriterion: ***Matrix.*** Input the matrix to be used as the mask  
+#### Name-Value pairs:
+* 'Threshold': ***Numeric.*** Input the set threshold for `MaskCriterion` (Leave blank to assume `MaskCriterion` is already a mask)  
+```matlab
+Threshold = 0.35;
+DataStruct = okMaskData(DataStruct,'Original','Displ',DataStruct.Original.Coherence, ...
+    'Threshold',Threshold);
+% Or if MaskCriterion is already a mask then:
+DataStruct = okMaskData(DataStruct,'Original','Displ',Mask);
+```
+---
 
+### 3. okMakeDataSubset.m
+* #### To make a subset of the data strucuture (Cropping)  
+#### Positional input:  
+* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* rmin: ***Numeric.*** Input the minimum row index
+* rmax: ***Numeric.*** Input the maximum row index
+* cmin: ***Numeric.*** Input the minimum column index
+* cmax: ***Numeric.*** Input the maximum column index
+```matlab
+rmin = 3500;
+rmax = 5932;
+cmin = 1;
+cmax = 4926;
+DataStruct = okMakeDataSubset(DataStruct,'Original',rmin,rmax,cmin,cmax);
+```
 
 
