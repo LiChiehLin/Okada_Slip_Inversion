@@ -12,11 +12,42 @@ A lot of the functions are designed as `Name-Value` pair inputs. Please refer to
 Also, the structures are updated after each execution of the sub-routine, so set the ouput structure as the input as shown below.  
 
 ---
- ### 1. okLoadData.m  
- * #### To read in GeoTiff files into Matlab environment using built-in function `readgeoraster()`
+## 0. okPlot.m
+It is highly recommended to use this plotting function to have a look of the stuff that is generated
+#### Positional input:
+* DataStruct: ***Structure.***: Input the sturcture that is going to be used to plot. 3 structures that are potentially used for this
+  * Displacement structure (`DataStruct`)
+  * Fault model structure (`FaultModel`)
+  * Slip model structure (`SlipModel`)
+* FigType: ***Character.*** Input what to plot. This is has to work with the input `DataStruct`. You cannot plot something that is not related to the data input  
+  * '***Displ***': Plot displacement (`DataStruct`)
+  * '***Azimuth***': Plot azimuth anlge (`DataStruct`)
+  * '***Incidence***': Plot incidence angle (`DataStruct`)
+  * '***FaultModel***': Plot the fault model (`FaultModel`), use with sub-option `'displ'`
+  * '***Dsample***': Plot the downsample result (`DataStruct`)
+  * '***GreenFunc***': Plot the Okada Green's function (`FaultModel`), use with sub-option `'displ'`
+  * '***Smooth***': Plot the smoothing matrix (`FaultModel`)
+  * '***Inversion***': Plot the inversion results (`SlipModel`), use with sub-options `'residual','slip1', 'slip2', 'totalslip', 'rake'`
+#### Name-Value pairs:
+* 'title': ***Character.***: Input figure title (default: ' ')
+* 'clim': ***Vector.***: Input the colorbar limits
+* 'cmap': ***Character.***: Input the colormap (default: 'default')
+* 'displ': ***Structure or matrix***: Input the displacement, works with `FigType='FaultModel'`
+* 'markersize': ***Numeric.***: Input the size of the scatter plot (default: 5)
+* 'dset': ***Character.***: Input the dataset to be plotted, works with `FigType='GreenFunc'`
+* 'n': ***Numeric.***: Input which inversion result to plot, works with `FigType='Inversion'`
+* 'residual': ***Numeric.***: Input whether or not plot the residual, works with `FigType='Inversion'` (default: 0)
+* 'lcurve': ***Numeric.***: Input whether or not plot the L-curve, works with `FigType='Inversion'` (default: 0)
+* 'slip1': ***Numeric.***: Input whether or not plot the first fault slip inversion, works with `FigType='Inversion'` (default: 0)
+* 'slip2': ***Numeric.***: Input whether or not plot the second fault slip inversion, works with `FigType='Inversion'` (default: 0)
+* 'totalslip': ***Numeric.***: Input whether or not plot the total fault slip inversion, works with `FigType='Inversion'` (default: 0)
+* 'rake': ***Numeric.***: Input whether or not plot the rake inversion, works with `FigType='Inversion'` (default: 0)
 
-It is quite problematic to read ISCE product directly into Matlab. Therefore, convert ISCE product into Gdal GeoTiff with GDAL tools `gdal_translate` before reading in.  
-  
+---
+### 1. okLoadData.m  
+* #### To read in GeoTiff files into Matlab environment using built-in function `readgeoraster()`
+
+It is quite problematic to read ISCE product directly into Matlab. Therefore, convert ISCE product into Gdal GeoTiff with GDAL tools `gdal_translate` before reading in. 
 Please let me know if there is an simpler way to do this. I appreciate any help!
 ```bash
 gdal_translate -b 2 filt_topophase.unw.geo UnwrapPhase.tif
