@@ -29,7 +29,8 @@ Add the routines to your working environment path:
 ```matlab
 addpath(genpath('function/'))
 ```
-You may run `main_elazig_example.m` seciton by section or all the way through. It should work all the way through and users can base off this to modifiy it to their own needs.  
+You may run `main_elazig_example.m` seciton by section or all the way through.  
+It should work all the way through and users can modify this main script to fit with their own needs.  
 
 ---
 Use `okPlot.m` to assist you determine where to make the fault geometry. Do this after you convert to local coordinate system
