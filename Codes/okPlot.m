@@ -11,7 +11,7 @@
 %             ***********************************************             %
 %                                                                         %
 % A holistic plotting routine for make figures according to the FigType   %
-% and the input data structure                                            %   
+% and the input data structure                                            % 
 % See below the supported figure types:                                   %
 %                                                                         %
 % 1. FigType='Displ'                                                      %
@@ -58,7 +58,7 @@
 % 'clim': Colorbar limits                                                 %
 % 'cmap': Colormap                                                        %
 % 'title': Figure title                                                   %
-% okPlot(FaultModel,'Displ','DataStruct.Subset','clim',[-2 2])            %
+% okPlot(FaultModel,'FaulModel','displ','DataStruct.Subset','clim',[-2 2])%
 %                                                                         %
 % FigType = 'Dsample'                                                     %
 % 'clim': Colorbar limits                                                 %
@@ -77,7 +77,7 @@
 % 'MarkerSize': Point size                                                %
 % 'title': Figure title                                                   %
 % okPlot(FaultModel,'GreenFunc','dset','GreenAscDS', ...                  %
-%   'Displ',DataStruct.Dsample,'MarkerSize',20)                           %
+%   'displ',DataStruct.Dsample,'MarkerSize',20)                           %
 %                                                                         %
 % FigType = 'Smooth'                                                      %
 % 'title': Figure title                                                   %
@@ -176,10 +176,11 @@ if strcmp(FigType,'Displ') || strcmp(FigType,'DisplOrig')
     disp(strcat('colormap:',32,cmap))
 
     % Start plotting
-    figure();title(t)
+    figure()
     if LocalFlag == 1
         imagesc([X(1,1),X(1,end)],[Y(1,1),Y(end,1)],Displ);
         clim(c);colormap(cmap)
+        title(t)
         set(gca, 'YDir','normal');
         xlabel('Local X')
         ylabel('Local Y')
@@ -188,6 +189,7 @@ if strcmp(FigType,'Displ') || strcmp(FigType,'DisplOrig')
         imagesc([X(1,1),X(1,end)],[Y(end,1),Y(1,1)],Displ);
         clim(c);colormap(cmap)
         set(gca, 'YDir','reverse');
+        title(t)
         xlabel('Column index')
         ylabel('Row index')
         axis equal
@@ -224,10 +226,11 @@ elseif strcmp(FigType,'Azimuth')
     disp(strcat('colormap:',32,cmap))
 
     % Start plotting
-    figure();title(t)
+    figure()
     if LocalFlag == 1
         imagesc([X(1,1),X(1,end)],[Y(1,1),Y(end,1)],Azi);
         clim(c);colormap(cmap)
+        title(t)
         set(gca, 'YDir','normal');
         xlabel('Local X')
         ylabel('Local Y')
@@ -235,6 +238,7 @@ elseif strcmp(FigType,'Azimuth')
     elseif LocalFlag == 0
         imagesc([X(1,1),X(1,end)],[Y(end,1),Y(1,1)],Azi);
         clim(c);colormap(cmap)
+        title(t)
         set(gca, 'YDir','reverse');
         xlabel('Column index')
         ylabel('Row index')
@@ -272,10 +276,11 @@ elseif strcmp(FigType,'Incidence')
     disp(strcat('colormap:',32,cmap))
 
     % Start plotting
-    figure();title(t)
+    figure()
     if LocalFlag == 1
         imagesc([X(1,1),X(1,end)],[Y(1,1),Y(end,1)],Inc);
         clim(c);colormap(cmap)
+        title(t)
         set(gca, 'YDir','normal');
         xlabel('Local X')
         ylabel('Local Y')
@@ -283,6 +288,7 @@ elseif strcmp(FigType,'Incidence')
     elseif LocalFlag == 0
         imagesc([X(1,1),X(1,end)],[Y(end,1),Y(1,1)],Inc);
         clim(c);colormap(cmap)
+        title(t)
         set(gca, 'YDir','reverse');
         xlabel('Column index')
         ylabel('Row index')
@@ -504,11 +510,13 @@ elseif strcmp(FigType,'Inversion')
             figure()
             plot(Lcurve(:,1),Lcurve(:,2),'-o')
             xlabel('Solution residual ||Lm||^2 ');ylabel('Model residual ||Gm-d||^2')
+            title(t)
         elseif n ~= 0 && length(n) == 1
             figure();hold on
             plot(Lcurve(:,1),Lcurve(:,2),'-o')
             plot(Lcurve(n,1),Lcurve(n,2),'r*')
             xlabel('Solution residual ||Lm||^2 ');ylabel('Model residual ||Gm-d||^2')
+            title(t)
         end
     end
 
