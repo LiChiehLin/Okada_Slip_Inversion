@@ -6,6 +6,13 @@ See [Codes/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Codes)
 See [Example_elazig_SinglePlane/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Example_elazig_SinglePlane) for a simple tutorial/demo on how to use these stuff!  
 
 ---
+### A little side notes:  
+I felt rather difficult to find a simple and holisitc tutorial on how to perform Okada slip inversions despite this method has been around for almost 40 years!  
+After all, it is actually not a difficult task if we are not dealing with sophisticated fault geometries or fancy maths. Therefore, I thought it will be nice to make it public available for others like me who wanted to learn Okada fault slip inversion but had nowhere to start with.   
+Also, I want to give a big shout out to my advisor, [Gareth Funning](https://github.com/geniusinaction), whose repositories (contain lots of tutorials and tools!) have encouraged and inspired me to work this towards Open Science. Cheers Gareth!  
+
+---
+
 The basic workflow is as follows:  
   
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/7feebc821cd85102756997bff945e8ab1af74999/Figure/Workflow.png)
