@@ -355,7 +355,7 @@ SlipModel = okInvertSlip({DataStructAsc,DataStructDes},{'Dsample','Dsample'}, ..
 ```
 
 ### Case 3: 2 LOS displacements, 1 Green's function
-If you wish to only solve for fault slip at certain rake angle, please still input 2 Green's functions, just set the other one 0 when generating the Green's function  
+If you wish to only solve for fault slip at certain rake angle, please still input 2 Green's functions, just set the `Slip` argument to 0 when generating the Green's function  
 
 ---
 
