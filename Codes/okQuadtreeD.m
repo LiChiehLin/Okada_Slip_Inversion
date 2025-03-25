@@ -76,7 +76,7 @@ elseif strcmp(Criterion,'curvature')
 end
 
 % Calculate the current leaf size
-LeafSize = (rend-rstart)*(cend-cstart);
+LeafSize = (rend-rstart+1)*(cend-cstart+1);
 % Calculate the NaN pixel counts
 NaNPixelRatio = sum(sum(isnan(Data(rstart:rend,cstart:cend)))) / (size(Data(rstart:rend,cstart:cend),1)*size(Data(rstart:rend,cstart:cend),2));
 
