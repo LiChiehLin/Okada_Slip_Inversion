@@ -10,8 +10,13 @@
 %             ***                okPlot.m                 ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.03.26)                                                     %
+%   Add 2 figure types:                                                   %
+%   1. AutoCorr: Plot the auto-correlation result                         %
+%   2. Covaraince: Plot the covaraince matrix of InSAR measurements       %
+%                                                                         %
 % A holistic plotting routine for make figures according to the FigType   %
-% and the input data structure                                            % 
+% and the input data structure                                            %
 % See below the supported figure types:                                   %
 %                                                                         %
 % 1. FigType='Displ'                                                      %
@@ -31,6 +36,10 @@
 %    To visualize the smoothing matrix with matlab spy command            %
 % 8. FigType='Inversion'                                                  %
 %    To visualize the inversion results                                   %
+% 9. FigType='AutoCorr'                                                   %
+%    To visualize the InSAR auto-correlation result                       %
+% 9. FigType='Covariance'                                                 %
+%    To visualize the covariance matrix                                   %
 %                                                                         %
 %-------------------------------------------------------------------------%
 %                                                                         %
@@ -103,6 +112,16 @@
 % okPlot(SlipModel,'Inversion','slip1',1,'slip2',1,'totalslip',1)         %
 % okPlot(SlipModel,'Inversion','totalslip',1,'rake',1,'n',95)             %
 %                                                                         %
+% FigType = 'AutoCorr'                                                    %
+% 'func': Plot the fitted function                                        %
+% 'one': Plot all in 1 figure                                             %
+% 'title': Figure title                                                   %
+%                                                                         %
+% FigType = 'Covariance'                                                  %
+% 'clim': Colorbar limits                                                 %
+% 'cmap': Colormap                                                        %
+% 'title': Figure title                                                   %
+%                                                                         %
 %-------------------------------------------------------------------------%
 %                                                                         %
 % Input:                                                                  %
@@ -112,7 +131,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function okPlot(DataStruct,FigType,varargin)
 p = inputParser;
-default_title = ' ';
+default_title = [];
 default_clim = 0;
 default_cmap = 'default';
 default_displ = 0;
@@ -125,6 +144,8 @@ default_slip1 = 0;
 default_slip2 = 0;
 default_totalslip = 0;
 default_rake = 0;
+default_func = [];
+default_one = 0;
 
 addParameter(p, 'title', default_title, @(x) ischar(x));
 addParameter(p, 'clim', default_clim, @(x) isnumeric(x) && length(x)==2 && x(1)<x(2));
@@ -139,6 +160,9 @@ addParameter(p, 'slip1', default_slip1, @(x) isnumeric(x) && x==0 || x==1);
 addParameter(p, 'slip2', default_slip2, @(x) isnumeric(x) && x==0 || x==1);
 addParameter(p, 'totalslip', default_totalslip, @(x) isnumeric(x) && x==0 || x==1);
 addParameter(p, 'rake', default_rake, @(x) isnumeric(x) && x==0 || x==1);
+addParameter(p, 'func', default_func, @(x) ischar(x) || iscell(x));
+addParameter(p, 'one', default_one, @(x) isnumeric(x) && x==0 || x==1);
+
 parse(p, varargin{:});
 
 % Plot displacement
@@ -656,6 +680,76 @@ elseif strcmp(FigType,'Inversion')
         xlabel('X'),ylabel('Y'),title('Residual (Obs. - Pred.)');subtitle(strcat('RMSE:',32,num2str(RMSE)))
         colorbar()
     end
+
+elseif strcmp(FigType,'AutoCorr')
+    AutoCorrelation = DataStruct.AutoCorrelation;
+    Dist = DataStruct.RadialDistance;
+    x = Dist(:);
+    y = AutoCorrelation(:);
+
+    % Parse parameter
+    func = p.Results.func;
+    one = p.Results.one;
+    t = p.Results.title;
+
+    % Check title and func
+    if isempty(t)
+        t = 'Radial distance v.s. Auto-correlation';
+    end
+    if isempty(func)
+        % User did not put any function input
+        func = DataStruct.FittedFunction;
+    elseif ~iscell(func)
+        % User only put 1 function input
+        func = cellstr(func);
+    end
+
+
+
+    disp('*** Plotting fitted function')
+    if one == 1
+        figure();hold on
+        plot(x,y,'.','MarkerFaceColor',[0.5 0.5 0.5],'MarkerEdgeColor',[0.5 0.5 0.5],'DisplayName','Pixels')
+        xlabel('Radial distance (m)');ylabel('Auto-correlation coefficient')
+        for i = 1:length(func)
+            disp(func{i})
+            Function = DataStruct.(func{i});
+            ypred = Function(x);
+
+            plot(x,ypred,'DisplayName',func{i},'LineWidth',3)
+        end
+        legend;title(t)
+
+    else
+        for i = 1:length(func)
+            disp(func{i})
+            Function = DataStruct.(func{i});
+            ypred = Function(x);
+
+            figure();hold on
+            plot(x,y,'.','MarkerFaceColor',[0.5 0.5 0.5],'MarkerEdgeColor',[0.5 0.5 0.5],'DisplayName','Pixels')
+            plot(x,ypred,'DisplayName',func{i},'LineWidth',3)
+            xlabel('Radial distance (m)');ylabel('Auto-correlation coefficient')
+            legend;title(strcat(t,32,func{i}))
+        end
+    end
+elseif strcmp(FigType,'Covariance')
+    Covariance = DataStruct.Covariance;
+
+    % Parse parameter
+    c = p.Results.clim;
+    cmap = p.Results.cmap;
+    t = p.Results.title;
+
+    if c == 0
+        c = [min(Covariance(:)), max(Covariance(:))];
+
+    end
+    if isempty(t)
+        t = 'Covariance matrix';
+    end
+    imagesc(Covariance);title(t);clim(c);colorbar();colormap(cmap)
+    xlabel('Pixel index');ylabel('Pixel index')
             
 end
 
