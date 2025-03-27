@@ -11,7 +11,10 @@
 %             ***********************************************             %
 %                                                                         %
 % (Update 2025.03.08)                                                     %
-% Change function output. Also support downsample the viewing geometry    %
+%   Change function output. Also support downsample the viewing geometry  %
+% (Update 2025.03.26)                                                     %
+%   Populate InSAR auto-correlation result to the output and some minor   %
+%   changes                                                               %
 %                                                                         %
 % Perform InSAR data downsampling based on the input downsampling function%
 % to prepare for fault slip inversion                                     %
@@ -80,6 +83,26 @@ else
     Uflag = 0;
 end
 
+% Also downsample longitude, latitude and coherence(optional)
+if any(strcmp(fieldnames(DataStruct.(Dataset)),'Longitude'))
+    Longitude = DataStruct.(Dataset).Longitude;
+    Lonflag = 1;
+else
+    Lonflag = 0;
+end
+if any(strcmp(fieldnames(DataStruct.(Dataset)),'Latitude'))
+    Latitude = DataStruct.(Dataset).Latitude;
+    Latflag = 1;
+else
+    Latflag = 0;
+end
+if any(strcmp(fieldnames(DataStruct.(Dataset)),'Coherence'))
+    Coherence = DataStruct.(Dataset).Coherence;
+    Cohflag = 1;
+else
+    Cohflag = 0;
+end
+
 % Parse the function type and retrieve corresponding parameters
 Dfunc = FuncParam.FunctionType;
 
@@ -116,7 +139,7 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
     disp(strcat('*** Total leaf count:',32,num2str(LeafCount)));
     disp(' ')
 
-    DsampleGeom = zeros(size(LeafCoord,1),5);
+    DsampleGeom = zeros(size(LeafCoord,1),8);
     DsampleData = zeros(size(LeafCoord,1),3);
     for i = 1:size(LeafCoord,1)
         rmin = LeafCoord(i,1);
@@ -140,7 +163,7 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
         end
         DsampleData(i,:) = [yCoord,xCoord,DataVal];
 
-        % Geometry
+        % Geometry and Lon Lat Coherence if any
         if Aziflag == 1
             tmpAzi = mean(Azimuth(rmin:rmax,cmin:cmax),'all','omitnan');
             DsampleGeom(i,1) = tmpAzi;
@@ -161,6 +184,19 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
             tmpUcoeff = mean(Ucoeff(rmin:rmax,cmin:cmax),'all','omitnan');
             DsampleGeom(i,5) = tmpUcoeff;
         end
+        if Lonflag == 1
+            tmpLoncoeff = mean(Longitude(rmin:rmax,cmin:cmax),'all','omitnan');
+            DsampleGeom(i,6) = tmpLoncoeff;
+        end
+        if Latflag == 1
+            tmpLatcoeff = mean(Latitude(rmin:rmax,cmin:cmax),'all','omitnan');
+            DsampleGeom(i,7) = tmpLatcoeff;
+        end
+        if Cohflag == 1
+            tmpCohcoeff = mean(Coherence(rmin:rmax,cmin:cmax),'all','omitnan');
+            DsampleGeom(i,8) = tmpCohcoeff;
+        end
+
     end
 
     % Find the NaN values and remove them before output
@@ -170,6 +206,7 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
 
     % Populate the input to the output
     DsampleDataStruct = DataStruct;
+    DsampleDataStruct.Dsample = DataStruct.(Dataset);
 
     % Output downsampled data and downsample parameters strucuture 
     DsampleDataStruct.Dsample.Displ = DsampleData(rmNaN,3);
@@ -177,7 +214,7 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
     DsampleDataStruct.Dsample.LocalY = DsampleData(rmNaN,1);
     DsampleDataStruct.Dsample.LeafCoord = LeafCoord;
 
-    % Output downsampled geometry
+    % Output downsampled geometry and Lon Lat Coherence
     if Aziflag == 1
         DsampleDataStruct.Dsample.Azimuth = DsampleGeom(rmNaN,1);
     end
@@ -192,6 +229,15 @@ if strcmp(Dfunc,'quadtree') || strcmp(Dfunc,'Quadtree')
     end
     if Uflag == 1
         DsampleDataStruct.Dsample.Ucoeff = DsampleGeom(rmNaN,5);
+    end
+    if Lonflag == 1
+        DsampleDataStruct.Dsample.Longitude = DsampleGeom(rmNaN,6);
+    end
+    if Latflag == 1
+        DsampleDataStruct.Dsample.Latitude = DsampleGeom(rmNaN,7);
+    end
+    if Cohflag == 1
+        DsampleDataStruct.Dsample.Coherence = DsampleGeom(rmNaN,8);
     end
 
     % Output the downsample parameters
