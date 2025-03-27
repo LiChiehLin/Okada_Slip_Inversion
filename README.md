@@ -165,5 +165,5 @@ okOutputGMT(SlipModel,'displ', ...
 
 ---
 AI-generated codes are great in their convenience and efficiency but with no soul.  
-Man-made codes are just pure craftsmanship. Hope there's people out there thinking the same as I do.
+Man-made codes are just pure **craftsmanship**. Hope there's people out there thinking the same as I do.
 
