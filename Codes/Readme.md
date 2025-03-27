@@ -323,8 +323,9 @@ See below for different function input for different usages:
   * lsq: Ordinary Least Squares (default)
   * nnlsq: Non-negative Least Squares
 * 'smoothsearch': ***Vector.***: Input the search range of the smoothing constant (Leave blank to use the default one)
+* 'weight': ***Character or cell of character or matrix***: Input the weighting matrix. It can be the covariance matrix made in `okMakeInSARCovMat.m` or user defined weighting matrix (Leave blank to assume uniform weighting)
   
-### Case 1: 1 LOS displacement, 2 Green's functions
+### Case 1: 1 LOS displacement, 2 Green's functions, InSAR covaraince matrix as data weights
 This is a very common case for InSAR users to invert for fault slip. Here's how the matrices should be placed and the way this function is designed:  
   
 <p align="center">
@@ -332,16 +333,23 @@ $$LOS$$ is the displacement </p>
 <p align="center">
 $$S$$ is the smoothing matrix </p>
 <p align="center">
+$$C$$ is the covariance matrix </p>
+<p align="center">
 $$G_{DS}$$ is the dip-slip Green's function </p>
 <p align="center">
 $$G_{SS}$$ is the strike-slip Green's function </p>  
 
 And we are solving a linear system such that:
 <p align="center">
-$$d = Am$$ </p>
-where  
+$$d = Am$$ </p>  
+
+The above linear system is weighted by $C^{-1}$ and smoothed by $S$:
+
+$$(A^TC^{-1}A + \lambda^2S^TS)m = A^TC^{-1}d$$
+
+The linear system can be written as an augmented format (convenient for coding):  
 <p align="center">
-$$d = \begin{bmatrix} LOS \\\ 0 \end{bmatrix}$$ $$A = \begin{bmatrix} G_{DS} & G_{SS} & 1 \\\ S & S & 0 \end{bmatrix}$$ </p>
+$$\begin{bmatrix} C^{-1}G_{DS} & C^{-1}G_{SS} & 1 \\\ \lambda S & \lambda S & 0 \end{bmatrix}m = \begin{bmatrix} C^{-1}LOS \\\ 0 \end{bmatrix}$$
 
 Here, the Green's functions are placed at matrix index `[11,12]`:  
 <p align="center">
@@ -352,9 +360,10 @@ $$A_{index} = \begin{bmatrix} 11 & 12 & 13 \\\ 21 & 22 & 23 \end{bmatrix}$$  </p
 ```matlab
 SmoothParam = [0.00001,0.0001,0.001,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1,10];
 GreenFuncPosition = [11,12];
-SlipModel = okInvertSlip(DataStruct,'Dsample',FaultModel,{'GreenDS','GreenSS'},GreenFuncPosition,'SmoothMat', ...
+SlipModel1 = okInvertSlip(DataStruct,'Dsample',FaultModel,{'GreenDS','GreenSS'},GreenFuncPosition,'SmoothMat', ...
     'solver','nnlsq', ...
-    'smoothsearch',SmoothParam);
+    'smoothsearch',SmoothParam, ...
+    'weight','Covariance');
 ```
 
 ### Case 2: 2 LOS displacements, 2 Green's functions
@@ -364,6 +373,10 @@ It is very similiar as the above
 $$LOS_{Asc}$$ is the ascending displacement </p>
 <p align="center">
 $$LOS_{Des}$$ is the descending displacement </p>
+<p align="center">
+$$S$$ is the smoothing matrix </p>
+<p align="center">
+$$C$$ is the covariance matrix </p>
 <p align="center">
 $$G_{AscDS}$$ is the ascending dip-slip Green's function </p>
 <p align="center">
@@ -375,7 +388,7 @@ $$G_{DesSS}$$ is the descending strike-slip Green's function </p>
 
 The linear system is placed as such:
 <p align="center">
-$$d = \begin{bmatrix} LOS_{Asc} \\\ LOS_{Des} \\\ 0 \end{bmatrix}$$ $$A = \begin{bmatrix} G_{AscDS} & G_{AscSS} & 1 \\\ G_{DesDS} & G_{DesSS} & 1 \\\ S & S & 0 \end{bmatrix}$$ </p>
+$$\begin{bmatrix} C^{-1}G_{AscDS} & C^{-1}G_{AscSS} & 1 \\\ C^{-1}G_{DesDS} & C^{-1}G_{DesSS} & 1 \\\ \lambda S & \lambda S & 0 \end{bmatrix}m = \begin{bmatrix} C^{-1}LOS_{Asc} \\\ C^{-1}LOS_{Des} \\\ 0 \end{bmatrix}$$
 
 Here, the Green's functions are placed at matrix index `[11,12,21,22]` with corrspondence with the displacement `[11,21]`: 
 <p align="center">
@@ -388,7 +401,8 @@ GreenFuncPosition = [11,12,21,22];
 SlipModel = okInvertSlip({DataStructAsc,DataStructDes},{'Dsample','Dsample'}, ...
     FaultModel,{'GreenAscDS','GreenAscSS','GreenDesDS','GreenDesSS'},[11,12,21,22],'SmoothMat', ...
     'solver','nnlsq', ...
-    'smoothsearch',SmoothParam);
+    'smoothsearch',SmoothParam, ...
+    'weight',{'Covariance','Covariance'});
 ```
 
 ### Case 3: 2 LOS displacements, 1 Green's function
