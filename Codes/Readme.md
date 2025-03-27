@@ -29,6 +29,8 @@ It is highly recommended to use this plotting function to have a look of the stu
   * '***GreenFunc***': Plot the Okada Green's function (`FaultModel`), use with sub-options `'dset', 'displ'`
   * '***Smooth***': Plot the smoothing matrix (`FaultModel`)
   * '***Inversion***': Plot the inversion results (`SlipModel`), use with sub-options `'residual','slip1', 'slip2', 'totalslip', 'rake'`
+  * '***AutoCorr***': Plot the auto-correlation result from InSAR (`DataStruct`), use with sub-options `'func','one'`
+  * '***Covariance***': Plot the covariance matrix from InSAR auto-correlation (`DataStruct`)
 #### Name-Value pairs:
 * 'title': ***Character.***: Input figure title (default: ' ')
 * 'clim': ***Vector.***: Input the colorbar limits
@@ -43,6 +45,8 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'slip2': ***Numeric.***: Input whether or not plot the second fault slip inversion, works with `FigType='Inversion'` (default: 0)
 * 'totalslip': ***Numeric.***: Input whether or not plot the total fault slip inversion, works with `FigType='Inversion'` (default: 0)
 * 'rake': ***Numeric.***: Input whether or not plot the rake inversion, works with `FigType='Inversion'` (default: 0)
+* 'func': ***Character or cell of character.***: Input the fitted functions to be plotted, works with `FigType='AutoCorr'` (default: Plot all functions)
+* 'one': ***Numeric.***: Input to plot the fitted functions in 1 figure or separate figures, works with `FigType='AutoCorr'` (default: 1)
 
 ### FigType = '***Displ***' || '***Azimuth***' || '***Incidence***'
 ```matlab
@@ -83,6 +87,16 @@ okPlot(SlipModel,'Inversion','residual',1,'n',5,'MarkerSize',30)
 okPlot(SlipModel,'Inversion','lcurve',1,'n',5,'title','L-curve')
 ```
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/5dd3cffa3a7a4b8734354a4c1db6ed5e5acdc1e6/Figure/okPlot_Inversion.png)
+### FigType = '***AutoCorr***'
+```matlab
+okPlot(DataStruct.Subset,'AutoCorr','one',1)
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/9177e841dfaa50225c5279fe36eef7d416bc8b99/Figure/okPlot_AutoCorr.png)
+### FigType = '***Covariance***'
+```matlab
+okPlot(DataStruct.Subset,'Covariance')
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/9177e841dfaa50225c5279fe36eef7d416bc8b99/Figure/okPlot_Covariance.png)
 
 ---
 ### 1. okLoadData.m  
