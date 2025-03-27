@@ -68,6 +68,16 @@ lon_origin = 38;
 DataStruct = okLLtoLocalXY(DataStruct,'Subset',lon_origin);
 ```
 
+#### 5.1 Optionally, you can use InSAR auto-correlation to build a covariance matrix to weight InSAR data. See Codes/ for more
+```matlab
+% Auto-correlation
+DataStruct = okInSARCov(DataStruct,'Subset', ...
+    'deramp',1);
+% Covaraince matrix
+DataStruct = okMakeInSARCovMat(DataStruct,'Dsample','exp1');
+```
+
+
 6. Use `okMakeDsampleParam.m` to make downsample parameters and use `okDsample.m` to downsample the InSAR displacement  
 Currently there is only **Quadtree** downsampling algorithm and 2 downsampling criterion can be chosen from:  
 * **'variance'**: [Jonsson (2002). Modeling volcano and earthquake deformation from satellite radar interferometric observations. Stanford University.](https://www.proquest.com/docview/305523554?pq-origsite=gscholar&fromopenview=true&sourcetype=Dissertations%20&%20Theses)    
@@ -110,7 +120,7 @@ Currently there is only the 2D Laplacian smoother
 FaultModel = okMakeSmoothMat(FaultModel);
 ```
 
-10. Use `okInvertSlip.m` to invert for fault slip
+10.1 Use `okInvertSlip.m` to invert for fault slip assuming uniform weighting
 Two solvers to choose from:
 * 'lsq': Ordinary Least Squares
 * 'nnlsq': Non-negative Least Squares
@@ -119,6 +129,14 @@ SmoothParam = [0.00001,0.0001,0.001,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09
 SlipModel = okInvertSlip(DataStruct,'Dsample',FaultModel,{'GreenDS','GreenSS'},[11,12],'SmoothMat', ...
     'solver','nnlsq', ...
     'smoothsearch',SmoothParam);
+```
+10.2 Use `okInvertSlip.m` to invert for fault slip using InSAR covaraince to weight data
+```matlab
+SmoothParam = [0.00001,0.0001,0.001,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,1,10];
+SlipModel = okInvertSlip(DataStruct,'Dsample',FaultModel,{'GreenDS','GreenSS'},[11,12],'SmoothMat', ...
+    'solver','nnlsq', ...
+    'smoothsearch',SmoothParam, ...
+    'weight','Covariance');
 ```
 
 11. Use `okOutputGMT.m` to output to GMT plottable format (psxy -L)
@@ -144,3 +162,8 @@ okOutputGMT(SlipModel,'displ', ...
 
 #### Residual
 ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/fb2534304298bb9a75073b6fe4a66491950c619b/Figure/Residual.png)
+
+---
+AI-generated codes are great in their convenience and efficiency but with no soul.  
+Man-made codes are just pure craftsmanship. Hope there's people out there thinking the same as I do.
+
