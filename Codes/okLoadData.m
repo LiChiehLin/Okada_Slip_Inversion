@@ -121,12 +121,15 @@ if nargin >= 5
         disp(strcat('*** Reading Coherence from',32,Coharg))
         [Coherence,A] = readgeoraster(Coharg);
         DataStruct.Original.Attributes = A;
-    elseif ismatrix(Coharg)
+        Cohflag = 1;
+    elseif ismatrix(Coharg) && Coharg ~= 0
         disp('*** Already a read-in matrix (Coherence)')
         Coherence = Coharg;
         flag(4) = 0;
+        Cohflag = 1;
     elseif Coharg == 0
         disp('*** No coherence data will be read in')
+        Cohflag = 0;
         Coherence = nan;
     end
     
@@ -159,7 +162,9 @@ if nargin >= 5
     DataStruct.Original.Displ = Displ;
     DataStruct.Original.Azimuth = Azimuth;
     DataStruct.Original.Incidence = Incidence;
-    DataStruct.Original.Coherence = Coherence;
+    if Cohflag == 1
+        DataStruct.Original.Coherence = Coherence;
+    end
     DataStruct.Original.Longitude = LonMat;
     DataStruct.Original.Latitude = LatMat;
     DataStruct.Processor = Processor;
