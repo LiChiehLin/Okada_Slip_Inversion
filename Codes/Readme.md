@@ -178,7 +178,20 @@ DataStruct = okLLtoLocalXY(DataStruct,'Subset',lon_origin);
 ```
 ---
 
-### 5. Down-sampling data 
+### 5. okInSARCov.m
+* ### To perform InSAR auto-correlation to produce covaraince matrix for weighting data
+#### Positional input:
+* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+#### Name-Value pairs:
+* 'deramp': ***Numeric.*** Input whether or not deramp first before auto-correlation (0 for no, default=1)
+* 'func': ***Character or cell of characters.*** Input the functions used to fit the auto-correlation result (default='exp1','poly3','poly5','poly7','poly9')
+```matlab
+DataStruct = okInSARCov(DataStruct,'Subset', ...
+    'deramp',1);
+```
+
+### 6. Down-sampling data 
 To down-sample the data using quadtree algorithm.  
 This will be a trial-and-error process until you find the best downsampled results for your case.  
 
@@ -219,8 +232,17 @@ DsampleParam = okMakeDsampleParam('quadtree', ...
 DataStruct = okDsample(DataStruct,'Subset',DsampleParam);
 ```
 ---
+### 7. okMakeInSARCovMat.m
+* ### To make the covariance matrix from auto-correlation result for weighting InSAR data 
+#### Positional input:
+* DataStruct: ***Structure.*** Input DataStruct from `okLoadData.m`
+* Dataset: ***Character.*** Input the field that contains the read-in displacement, azimuth ...
+* func: ***Character.*** Input which fitted function result to be used to produce covariance matrix
+```matlab
+DataStruct = okMakeInSARCovMat(DataStruct,'Dsample','exp1');
+```
 
-### 6. okMakeFaultModel.m
+### 8. okMakeFaultModel.m
 * #### To make the fault geometry
 #### Positional input:
 * StartXYZ: ***Vector.***: Input the coordinate of the starting point of the fault patch
@@ -242,7 +264,7 @@ FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,Patch
 ```
 ---
 
-### 7. okMakeGreenFunc.m
+### 9. okMakeGreenFunc.m
 * #### To make the Okada Green's function  
 Please be advised that the setting of the Green's function has a impact on fault slip inversion if using `Non-negative least squares` (as it forces all inversion result to be positive)  
 #### Positional input:
@@ -274,7 +296,7 @@ FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS
 ```
 ---
 
-### 8. okMakeSmoothMat.m
+### 10. okMakeSmoothMat.m
 * #### To make the smoothing matrix  
 Currently there is only the 2D Laplacian smoother.  
 I am open to any smoother recommendations for future versions! Please let me know!  
@@ -285,7 +307,7 @@ FaultModel = okMakeSmoothMat(FaultModel);
 ```
 ---
 
-### 9. okInvertSlip.m
+### 11. okInvertSlip.m
 * #### To invert for the fault slip
 To correctly use this function, you will need a very basic linear algebra.  
 See below for different function input for different usages:
@@ -298,7 +320,7 @@ See below for different function input for different usages:
 * SmoothMatDataset: ***Character.*** Input the smoothing matrix field name stored in `FaultModel` (This is to give freedom for users using different smoother other than 2D Laplacian)
 #### Name-Value pairs:
 * 'solver': ***Character.***: Input the inversion solver
-  * lsq: Ordinary Least Squares
+  * lsq: Ordinary Least Squares (default)
   * nnlsq: Non-negative Least Squares
 * 'smoothsearch': ***Vector.***: Input the search range of the smoothing constant (Leave blank to use the default one)
   
@@ -374,7 +396,7 @@ If you wish to only solve for fault slip at certain rake angle, please still inp
 
 ---
 
-### 10. okOutputGMT.m
+### 11. okOutputGMT.m
 * #### To output result in GMT plottable format along with a slip inversion report
 #### Positional input:
 * SlipModel: ***Structure.***: Input SlipModel
