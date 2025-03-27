@@ -10,6 +10,10 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.03.26)                                                    %
+%   Allowing putting weights on data. Users can use the covariance matrix %
+%   made in okInSARCov.m and okMakeInSARCovMat.m                          %
+%                                                                         %
 % Invert fault slip based on the input Displacement, Green's function and %
 % smoothing matrix. This function also searches the best smoothing param. %
 %                                                                         %
@@ -37,6 +41,9 @@
 %    7.1. 'solver': 'lsq' or 'nnlsq' (default: lsq)                       %
 %         'lsq': Least-squares                                            %
 %         'nnlsq': Non-negative least squares                             %
+%    7.2. 'smoothsearch': Vector for the smoothing constant search        %
+%         (default: 1e-10~1e4)                                            %
+%    7.3. 'weight': Characters or matrix (default: uniform weighting)     %
 %                                                                         %
 % Example: (1 diplacement, 1 fault, uniform rake, Least squares)          %
 % ModelSlip = okInvertSlip(DataStruct,'Dsample', ...                      %
@@ -48,6 +55,13 @@
 % ModelSlip = okInvertSlip(DataStruct,'Dsample', ...                      %
 %             FaultModel,{'GreenDS','GreenSS'},[11,12],'SmoothMat', ...   %
 %             'solver','nnlsq')                                           %
+%                                                                         %
+% Example: (1 diplacement, 1 fault, strike-slip and dip-slip, Non-neg     %
+%          Least Squares, data weighted by covariance)                    %
+% ModelSlip = okInvertSlip(DataStruct,'Dsample', ...                      %
+%             FaultModel,{'GreenDS','GreenSS'},[11,12],'SmoothMat', ...   %
+%             'solver','nnlsq',...                                        %
+%             'weight','Covariance')                                      %
 %                                                                         %
 % Example: (2 diplacement, 1 fault, strike-slip and dip-slip, Non-neg     %
 %          Least Squares)                                                 %
@@ -79,17 +93,23 @@ default_solver = 'lsq';
 % For smoothing parameter search
 n = -10:0.1:4;
 default_smoothsearch = transpose(10.^n);
-
+% For weighting
+default_weight = [];
 addParameter(p, 'solver', default_solver, @(x) ischar(x) && strcmp(x,'lsq') || strcmp(x,'nnlsq'));
 addParameter(p, 'smoothsearch', default_smoothsearch, @(x) isnumeric(x) && isvector(x));
+addParameter(p, 'weight', default_weight, @(x) ischar(x) || iscell(x) || ismatrix(x));
 
 parse(p, varargin{:});
 solver = p.Results.solver;
 SmoothParam = p.Results.smoothsearch;
+WeightParse = p.Results.weight;
 
+
+% Take care of the smoothing constant search
 if size(SmoothParam,1) < size(SmoothParam,2)
     SmoothParam = transpose(SmoothParam);
 end
+
 
 % Get the arrangement of the design matrix
 % Arrange displacements and corresponding Green's functions
@@ -100,7 +120,9 @@ N = length(DataStruct);
 Displ = cell(N,1);
 LocalX = cell(N,1);
 LocalY = cell(N,1);
+Weight = cell(N,1);
 G = cell(GR,GC);
+DisplN = zeros(N,1);
 % If the input Green's function datasets only occupy 1 column, then it will
 % assume this is only solving for 1 slip with an uniform rake angle. The
 % slip model output will not include the rake and total slip fields
@@ -123,12 +145,14 @@ for i = 1:N
     LocalXtmp = tmpStruct.(tmpDisplDataset).LocalX;
     LocalYtmp = tmpStruct.(tmpDisplDataset).LocalY;
     LonOrigin = tmpStruct.(tmpDisplDataset).LongitudeOrigin;
+    
 
     % Remove NaN values
     rmNaN = find(~isnan(Displtmp));
     Displ{i} = reshape(Displtmp(rmNaN),[],1);
     LocalX{i} = reshape(LocalXtmp(rmNaN),[],1);
     LocalY{i} = reshape(LocalYtmp(rmNaN),[],1);
+    
 
     % Link displacement with its associated Green's function
     LinkInd = find(i == floor(GreenFuncPosition./10));
@@ -143,6 +167,25 @@ for i = 1:N
         % Store in pre-allocated cell
         G{Grow,Gcol} = Gtmp;
     end
+
+    % Deal with the weighting 
+    if ~isempty(WeightParse)
+        if N == 1 && ischar(WeightParse) && ~isempty(WeightParse)
+            tmpWeightDataset = WeightParse;
+        elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse)
+            tmpWeightDataset = WeightParse{i};
+        end
+
+    % Retrieve data
+    Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
+
+    % Remove NaN values
+    Weight{i} = Weighttmp(rmNaN,:);
+
+    % Store data count
+    DisplN(i) = size(Weighttmp,1);
+    end
+
     
 end
 % Unpack the arranged stuff
@@ -150,6 +193,25 @@ Displ = cell2mat(Displ);
 LocalX = cell2mat(LocalX);
 LocalY = cell2mat(LocalY);
 G = cell2mat(G);
+
+
+% Unpack weighting matrix
+if ~isempty(WeightParse)
+    W = zeros(numel(Displ),numel(Displ));
+    BeginI = 0;
+    for i = 1:length(Weight)
+        Wtmp = Weight{i};
+        EndI = sum(DisplN(1:i));
+        Ind = (BeginI+1):EndI;
+
+        W(Ind,Ind) = Wtmp;
+        BeginI = Ind(end);
+    end
+else
+    W = eye(numel(Displ));
+
+end
+
 
 % Arrange smoothing matrix
 % Assume solving for strike-slip and dip-slip
@@ -199,8 +261,11 @@ Rake = zeros(SmoothSize,length(SmoothParam));
 for i = 1:length(SmoothParam)
     % Inversion
     alpha = SmoothParam(i);
-    A = [G,ones(obsN,1); alpha.*S,zeros(patM,1)];
-    d = [Displ(:);zeros(patM,1)];
+    Gtmp = inv(W)*G; % Put the weighting here
+    A = [Gtmp,ones(obsN,1); alpha.*S,zeros(patM,1)];
+
+    dtmp = inv(W)*Displ(:); % Put the weighting here 
+    d = [dtmp;zeros(patM,1)];
     if strcmp(solver,'lsq')
         m = A\d;
     elseif strcmp(solver,'nnlsq')
@@ -214,8 +279,8 @@ for i = 1:length(SmoothParam)
     Mw = (2/3)*(log10(M0)-9.1);
 
     % Calculate the residual and prepare for L-curve
-    tmp = A*m;
-    ResNorm = sqrt(sum((tmp(1:obsN) - Displ(:)).^2));
+    tmp = [G,ones(obsN,1)]*m;
+    ResNorm = sqrt(sum((inv(W)*(Displ(:) - tmp(1:obsN))).^2));
     SolNorm = sqrt(sum((S*m(1:sum(TotalPatchCount))).^2));
     Pred = tmp(1:obsN);
 
@@ -263,4 +328,5 @@ ModelSlip.MomentMagnitude = MomentMagnitude;
 ModelSlip.Solver = solver;
 ModelSlip.LongitudeOrigin = LonOrigin;
 ModelSlip.ResolutionMat = ResolutionMat;
+ModelSlip.WeightMat = W;
 end
