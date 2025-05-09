@@ -8,6 +8,8 @@ See also [Codes/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/C
 
 ---
 ### A little side notes:  
+This is the final project for GEO244 ***Space Geodesy*** lectured by Gareth at UC, Riverside.  
+  
 I felt rather difficult to find a simple and holisitc tutorial on how to perform Okada slip inversions despite this method has been around for almost 40 years!  
 After all, it is actually not a difficult task if we are not dealing with sophisticated fault geometries or fancy maths. Therefore, I thought it will be nice to make it public available for others like me who wanted to learn Okada fault slip inversion but had nowhere to start with.   
 Also, I want to give a big shout out to my advisor, [Gareth Funning](https://github.com/geniusinaction), whose repositories (contain lots of tutorials and tools!) have encouraged and inspired me to work this towards Open Science. Cheers Gareth!  
