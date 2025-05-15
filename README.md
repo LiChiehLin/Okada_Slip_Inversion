@@ -10,7 +10,7 @@ See [Example_Parkfield_SinglePlane](https://github.com/LiChiehLin/Okada_Slip_Inv
 See also [Codes/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Codes) for more explanations if you wish to know more about the nuts and bolts of the functions!  
 
 ---
-### A little side notes:  
+### A little side note:  
 This is the final project for GEO244 ***Space Geodesy*** lectured by *Prof.* Gareth Funning at UC, Riverside.  
   
 I felt rather difficult to find a simple and holisitc tutorial on how to perform Okada slip inversions despite this method has been around for almost 40 years!  
