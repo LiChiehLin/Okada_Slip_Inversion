@@ -10,6 +10,11 @@
 %             ***                okPlot.m                 ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.05.13)                                                     %
+%   Add 1 figure type:                                                    %
+%   1. GNSS: Plot the GNSS measurements                                   %
+%   Supports different 'Inversion' figure types. Now supports InSAR and   %
+%   GNSS model fit plots                                                  %
 % (Update 2025.03.26)                                                     %
 %   Add 2 figure types:                                                   %
 %   1. AutoCorr: Plot the auto-correlation result                         %
@@ -22,23 +27,25 @@
 % 1. FigType='Displ'                                                      %
 %    To visualize the read-in dispalcement to determine where the fault is%
 %    and to make subsets according to the coordinates                     %
-% 2. FigType='Azimuth'                                                    %
+% 2. FigType='GNSS'                                                       %
+%    To visualize the read-in GNSS measurements                           %
+% 3. FigType='Azimuth'                                                    %
 %    To visualize the Azimuth angle                                       %
-% 3. FigType='Incidence'                                                  %
+% 4. FigType='Incidence'                                                  %
 %    To visualize the Incidence angle                                     %
-% 4. FigType='FaultModel'                                                 %
+% 5. FigType='FaultModel'                                                 %
 %    To visualize the fault model made from okMakeFaultModel.m            %
-% 5. FigType='Dsample'                                                    %
+% 6. FigType='Dsample'                                                    %
 %    To visualzie the downsampled result. Both data points and tree leaves%
-% 6. FigType='GreenFunc'                                                  %
+% 7. FigType='GreenFunc'                                                  %
 %    To visualize the forward okada Green's function                      %
-% 7. FigType='Smooth'                                                     %
+% 8. FigType='Smooth'                                                     %
 %    To visualize the smoothing matrix with matlab spy command            %
-% 8. FigType='Inversion'                                                  %
+% 9. FigType='Inversion'                                                  %
 %    To visualize the inversion results                                   %
-% 9. FigType='AutoCorr'                                                   %
+% 10. FigType='AutoCorr'                                                  %
 %    To visualize the InSAR auto-correlation result                       %
-% 9. FigType='Covariance'                                                 %
+% 11. FigType='Covariance'                                                %
 %    To visualize the covariance matrix                                   %
 %                                                                         %
 %-------------------------------------------------------------------------%
@@ -49,6 +56,10 @@
 % 'cmap': Colormap                                                        %
 % 'title': Figure title                                                   %
 % okPlot(DataStruct.Subset,'Displ','clim',[-2 2])                         %
+%                                                                         %
+% FigType = 'GNSS'                                                        %
+% 'scale': Multiplier for visualization                                   %
+% okPlot(DataStruct.Subset,'GNSS','scale',1000)                           %
 %                                                                         %
 % FigType = 'Azimuth'                                                     %
 % 'clim': Colorbar limits                                                 %
@@ -67,7 +78,12 @@
 % 'clim': Colorbar limits                                                 %
 % 'cmap': Colormap                                                        %
 % 'title': Figure title                                                   %
-% okPlot(FaultModel,'FaulModel','displ','DataStruct.Subset','clim',[-2 2])%
+% 'GNSS': Plot GNSS measurement on top of the fault model                 %
+% 'scale': Multiplier for visualization                                   %
+% okPlot(FaultModel,'FaultModel','displ','DataStruct.Subset', ...         %
+%   'clim',[-2 2])                                                        %
+% okPlot(FaultModel,'FaultModel','GNSS','DataStruct.Original', ...        %
+%   'scale',1000)                                                         %
 %                                                                         %
 % FigType = 'Dsample'                                                     %
 % 'clim': Colorbar limits                                                 %
@@ -96,6 +112,7 @@
 % 'residual': Plot the residual                                           %
 %   This has to be used with 'n' to specify which result to plot and 'n'  %
 %   can only be 1 number                                                  %
+% 'dset': Plot which dataset of the model prediction                      %
 % 'lcurve': Plot the L-curve                                              %
 % 'slip1': Plot the slip distribution (Normally is the Dip-slip)          %
 % 'slip2': Plot the slip distribution (Normally is the Strike-slip)       %
@@ -108,6 +125,8 @@
 % okPlot(SlipModel,'Inversion','lcurve',1)                                %
 % okPlot(SlipModel,'Inversion','lcurve',1,'n',95)                         %
 % okPlot(SlipModel,'Inversion','residual',1,'n',95)                       %
+% okPlot(SlipModel,'Inversion','residual',1,'n',95,'dset','GNSS')         %
+% okPlot(SlipModel,'Inversion','residual',1,'n',95,'dset','InSAR')        %
 % okPlot(SlipModel,'Inversion','slip1',1)                                 %
 % okPlot(SlipModel,'Inversion','slip1',1,'slip2',1,'totalslip',1)         %
 % okPlot(SlipModel,'Inversion','totalslip',1,'rake',1,'n',95)             %
@@ -146,6 +165,8 @@ default_totalslip = 0;
 default_rake = 0;
 default_func = [];
 default_one = 0;
+default_scale = 1;
+default_linewidth = 0.5;
 
 addParameter(p, 'title', default_title, @(x) ischar(x));
 addParameter(p, 'clim', default_clim, @(x) isnumeric(x) && length(x)==2 && x(1)<x(2));
@@ -162,6 +183,9 @@ addParameter(p, 'totalslip', default_totalslip, @(x) isnumeric(x) && x==0 || x==
 addParameter(p, 'rake', default_rake, @(x) isnumeric(x) && x==0 || x==1);
 addParameter(p, 'func', default_func, @(x) ischar(x) || iscell(x));
 addParameter(p, 'one', default_one, @(x) isnumeric(x) && x==0 || x==1);
+addParameter(p, 'scale', default_scale, @(x) isnumeric(x));
+addParameter(p, 'GNSS', default_displ, @(x) isstruct(x));
+addParameter(p, 'LineWidth', default_linewidth, @(x) isnumeric(x) && x > 0);
 
 parse(p, varargin{:});
 
@@ -219,6 +243,27 @@ if strcmp(FigType,'Displ') || strcmp(FigType,'DisplOrig')
         axis equal
     end
     colorbar()
+
+elseif strcmp(FigType,'GNSS')
+    disp('*** Plotting GNSS displacement/velocity vectors')
+    X = DataStruct.LocalX;
+    Y = DataStruct.LocalY;
+    EWdispl = DataStruct.DisplEW;
+    NSdispl = DataStruct.DisplNS;
+    UDdispl = DataStruct.DisplUD;
+    scale = p.Results.scale;
+    LW = p.Results.LineWidth;
+
+    %  Plot horizontal and vertical displacements
+    figure()
+    subplot(1,2,1)
+    quiver(X,Y,EWdispl*scale,NSdispl*scale,'off','LineWidth',LW);title('Horizontal motion')
+    xlabel('Local X (m)');ylabel('Local Y (m)');axis equal
+    subplot(1,2,2)
+    quiver(X,Y,zeros(length(X),1),UDdispl*scale,'off','LineWidth',LW);title('Vertical motion')
+    xlabel('Local X (m)');ylabel('Local Y (m)');axis equal
+    
+
 
 % Plot azimuth angle
 elseif strcmp(FigType,'Azimuth')
@@ -379,7 +424,10 @@ elseif strcmp(FigType,'FaultModel')
     c = p.Results.clim;
     cmap = p.Results.cmap;
     t = p.Results.title;
+    GNSSParse = p.Results.GNSS;
+    scale = p.Results.scale;
 
+    % Determine whether plot InSAR field or GNSS
     if isstruct(DisplParse)
         Displ = DisplParse.Displ;
         X = DisplParse.LocalX;
@@ -394,6 +442,17 @@ elseif strcmp(FigType,'FaultModel')
     elseif DisplParse == 0
         DisplFlag = 0;
     end
+    if isstruct(GNSSParse)
+        X = GNSSParse.LocalX;
+        Y = GNSSParse.LocalY;
+        EWdispl = GNSSParse.DisplEW;
+        NSdispl = GNSSParse.DisplNS; 
+        UDdispl = GNSSParse.DisplUD;
+        GNSSFlag = 1;
+    elseif ~isstruct(GNSSParse) && GNSSParse == 0
+        GNSSFlag = 0;
+    end
+
     % Make color limits
     if c==0 && DisplFlag == 1
         c = [min(Displ(:)),max(Displ(:))];
@@ -410,6 +469,10 @@ elseif strcmp(FigType,'FaultModel')
         imagesc([X(1,1),X(1,end)],[Y(1,1),Y(end,1)],Displ);
         set(gca, 'YDir','normal');
         clim(c);colormap(cmap);
+    end
+    if GNSSFlag == 1
+        quiver3(X,Y,zeros(length(X),1),EWdispl*scale,NSdispl*scale,zeros(length(X),1),'b')
+        quiver3(X,Y,zeros(length(X),1),zeros(length(X),1),zeros(length(X),1),UDdispl*scale,'r')
     end
     fill3(PatchX,PatchY,PatchZ,'black','FaceAlpha',0.3,'EdgeColor','k')
     scatter3(okFault(:,1),okFault(:,2),okFault(:,3),'r.')
@@ -469,22 +532,62 @@ elseif strcmp(FigType,'GreenFunc')
     if any(strcmp(fieldnames(DataStruct),dset))
         LocalX = DisplParse.LocalX;
         LocalY = DisplParse.LocalY;
-        GreenFunc = DataStruct.(dset);
-        GreenFunc = sum(GreenFunc,2);
-
-        if c == 0
-            c = [min(GreenFunc(:)),max(GreenFunc(:))];
+        GreenFunctmp = DataStruct.(dset);
+        if isstruct(GreenFunctmp)
+            fields = fieldnames(GreenFunctmp);
+            N = numel(fields);
+            GreenFunc = cell(N,1);
+            for i = 1:N
+                GreenFunc{i} = sum(GreenFunctmp.(fields{i}),2);
+            end
+        else
+            GreenFunc = sum(GreenFunctmp,2);
+            N = 1;
         end
-        % Just in case both clim are equal
-        if c(1) == c(2)
-            c(1) = c(1)-0.0001;
-            c(2) = c(2)+0.0001;
-        end
 
-        figure()
-        scatter(LocalX,LocalY,MarkerSize,GreenFunc,'filled')
-        clim(c);colormap(cmap);colorbar();title(t)
-        xlabel('Local X');ylabel('Local Y')
+
+        
+
+        % Start plotting
+        if N == 1
+            % This is basically the LOS Green's
+            if c == 0
+                c = [min(GreenFunc(:)),max(GreenFunc(:))];
+            end
+            % Just in case both clim are equal
+            if c(1) == c(2)
+                c(1) = c(1)-0.0001;
+                c(2) = c(2)+0.0001;
+            end
+
+            figure()
+            scatter(LocalX,LocalY,MarkerSize,GreenFunc,'filled')
+            clim(c);colormap(cmap);colorbar();title(t)
+            xlabel('Local X');ylabel('Local Y')
+        else
+            % This is 3D Green's
+            % Left to right: EW, NS, UD
+            Direc = {'EW','NS','UD'};
+            figure();hold on
+            for i = 1:N
+                if c == 0
+                    tmp = GreenFunc{i};
+                    cplot = [min(tmp(:)),max(tmp(:))];
+                else
+                    cplot = c;
+                end
+                % Just in case both clim are equal
+                if cplot(1) == cplot(2)
+                    cplot(1) = cplot(1)-0.0001;
+                    cplot(2) = cplot(2)+0.0001;
+                end
+                subplot(1,N,i)
+                scatter(LocalX,LocalY,MarkerSize,GreenFunc{i},'filled')
+                clim(cplot);colormap(cmap);colorbar();title(strcat(t,32,Direc{i}))
+                xlabel('Local X');ylabel('Local Y')
+            end
+
+        end
     else
         erorr('Cannot find input Green function field name')
     end
@@ -504,6 +607,7 @@ elseif strcmp(FigType,'Inversion')
     LocalX = DataStruct.LocalX;
     LocalY = DataStruct.LocalY;
     ModelPrediction = DataStruct.ModelPrediction;
+    DataType = DataStruct.DataType;
     FaultSlip = DataStruct.FaultSlip;
     TotalSlip = DataStruct.TotalSlip;
     Rake = DataStruct.Rake;
@@ -526,6 +630,9 @@ elseif strcmp(FigType,'Inversion')
     rake = p.Results.rake;
     MarkerSize = p.Results.MarkerSize;
     t = p.Results.title;
+    dset = p.Results.dset;
+    scale = p.Results.scale;
+    LW = p.Results.LineWidth;
     
 
     % Plot the L-curve
@@ -656,29 +763,112 @@ elseif strcmp(FigType,'Inversion')
 
     % Plot the residual
     if residual == 1 && n ~= 0 && length(n) == 1
-        if c == 0
-            c = [min(Displ(:)),max(Displ(:))];
-        end
-        rmNaN = find(~isnan(Displ(:)));
-        Pred = ModelPrediction(:,n);
-        Diff = Displ(rmNaN)-Pred(rmNaN);
-        c2 =[min(Diff(:)),max(Diff(:))];
-        RMSE = sqrt(sum(Diff.^2)/length(Displ(rmNaN)));
+        if dset == 0
+            if c == 0
+                c = [min(Displ(:)),max(Displ(:))];
+            end
+            rmNaN = find(~isnan(Displ(:)));
+            Pred = ModelPrediction(:,n);
+            Diff = Displ(rmNaN)-Pred(rmNaN);
+            c2 =[min(Diff(:)),max(Diff(:))];
+            RMSE = sqrt(sum(Diff.^2)/length(Displ(rmNaN)));
+    
+            disp('* Treat all displacement points as InSAR points')
+            figure()
+            subplot(1,3,1)
+            scatter(LocalX,LocalY,MarkerSize,Displ,'filled')
+            clim(c);colormap(cmap);colorbar()
+            xlabel('X'),ylabel('Y'),title('Observation')
+            subplot(1,3,2)
+            scatter(LocalX,LocalY,MarkerSize,ModelPrediction(:,n),'filled')
+            clim(c);colormap(cmap);colorbar()
+            xlabel('X'),ylabel('Y'),title('Model prediction');subtitle(strcat('Smoothing:',32,num2str(SmoothParam(n))))
+            subplot(1,3,3)
+            scatter(LocalX,LocalY,MarkerSize,Displ-ModelPrediction(:,n),'filled')
+            clim(c2);colormap(cmap)
+            xlabel('X'),ylabel('Y'),title('Residual (Obs. - Pred.)');subtitle(strcat('RMSE:',32,num2str(RMSE)))
+            colorbar()
+        elseif strcmp(dset,'GNSS')
+            ind = DataType{strcmp(DataType,'GNSS'),2};
+            Xtmp = LocalX(ind);
+            Comp1 = sum(Xtmp(1) == Xtmp);
+            
+            if Comp1 == 2
+                % This implies only EW and NS were used in inversion
+                Dlength = length(ind)/2;
+                X = LocalX(ind(1):ind(Dlength));
+                Y = LocalY(ind(1):ind(Dlength));
+                EWdispl = Displ(ind(1):ind(Dlength));
+                NSdispl = Displ(ind(Dlength+1):ind(Dlength*2));
+                UDdispl = nan(Dlength,1);
+                EWPred = ModelPrediction(ind(1):ind(Dlength),n);
+                NSPred = ModelPrediction(ind(Dlength+1):ind(Dlength*2),n);
+                UDPred = nan(Dlength,1);
+            elseif Comp1 ~= 2
+                % This implies all three EW, NS and UD were used in
+                % inversion
+                Dlength = length(ind)/3;
+                X = LocalX(ind(1):ind(Dlength));
+                Y = LocalY(ind(1):ind(Dlength));
+                EWdispl = Displ(ind(1):ind(Dlength));
+                NSdispl = Displ(ind(Dlength+1):ind(Dlength*2));
+                UDdispl = Displ(ind(Dlength*2+1):ind(Dlength*3));
+                EWPred = ModelPrediction(ind(1):ind(Dlength),n);
+                NSPred = ModelPrediction(ind(Dlength+1):ind(Dlength*2),n);
+                UDPred = ModelPrediction(ind(Dlength*2+1):ind(Dlength*3),n);
+            end
+            EWRMSE = sqrt(mean((EWdispl - EWPred).^2,'omitnan'));
+            NSRMSE = sqrt(mean((NSdispl - NSPred).^2,'omitnan'));
+            UDRMSE = sqrt(mean((UDdispl - UDPred).^2,'omitnan'));
+            RMSE = mean([EWRMSE,NSRMSE,UDRMSE],'omitnan');
+            
+            disp('* Plot GNSS model fit')
+            figure()
+            subplot(1,2,1);axis equal;hold on
+            quiver(X,Y,EWdispl*scale,NSdispl*scale,'off','b','LineWidth',LW)
+            quiver(X,Y,EWPred*scale,NSPred*scale,'off','r','LineWidth',LW)
+            legend({'Data','Modeled'})
+            title(strcat(t,32,'Horizontal motion'))
+            subtitle(strcat('RMSE:',32,num2str(RMSE)))
+            subplot(1,2,2);axis equal;hold on
+            quiver(X,Y,zeros(length(UDdispl),1),UDdispl*scale,'off','b','LineWidth',LW)
+            quiver(X,Y,zeros(length(UDdispl),1),UDPred*scale,'off','r','LineWidth',LW)
+            legend({'Data','Modeled'})
+            title(strcat(t,32,'Vertical motion'))
+            subtitle(strcat('RMSE:',32,num2str(RMSE)))
 
-        figure()
-        subplot(1,3,1)
-        scatter(LocalX,LocalY,MarkerSize,Displ,'filled')
-        clim(c);colormap(cmap);colorbar()
-        xlabel('X'),ylabel('Y'),title('Observation')
-        subplot(1,3,2)
-        scatter(LocalX,LocalY,MarkerSize,ModelPrediction(:,n),'filled')
-        clim(c);colormap(cmap);colorbar()
-        xlabel('X'),ylabel('Y'),title('Model prediction');subtitle(strcat('Smoothing:',32,num2str(SmoothParam(n))))
-        subplot(1,3,3)
-        scatter(LocalX,LocalY,MarkerSize,Displ-ModelPrediction(:,n),'filled')
-        clim(c2);colormap(cmap)
-        xlabel('X'),ylabel('Y'),title('Residual (Obs. - Pred.)');subtitle(strcat('RMSE:',32,num2str(RMSE)))
-        colorbar()
+        elseif strcmp(dset,'InSAR')
+            ind = [DataType{strcmp(DataType,'InSAR'),2}];
+
+            X = LocalX(ind);
+            Y = LocalY(ind);
+            InSARdispl = Displ(ind);
+            InSARpred = ModelPrediction(ind);
+            if c == 0
+                c = [min(InSARdispl(:)),max(InSARdispl(:))];
+            end
+
+            rmNaN = find(~isnan(InSARdispl(:)));
+            Diff = InSARdispl(rmNaN)-InSARpred(rmNaN);
+            c2 =[min(Diff(:)),max(Diff(:))];
+            RMSE = sqrt(sum(Diff.^2)/length(InSARdispl(rmNaN)));
+
+            disp('* Plot InSAR model fit')
+            figure()
+            subplot(1,3,1)
+            scatter(X,Y,MarkerSize,InSARdispl,'filled')
+            clim(c);colormap(cmap);colorbar()
+            xlabel('X'),ylabel('Y'),title('Observation')
+            subplot(1,3,2)
+            scatter(X,Y,MarkerSize,InSARpred(:,n),'filled')
+            clim(c);colormap(cmap);colorbar()
+            xlabel('X'),ylabel('Y'),title('Model prediction');subtitle(strcat('Smoothing:',32,num2str(SmoothParam(n))))
+            subplot(1,3,3)
+            scatter(X,Y,MarkerSize,InSARdispl-InSARpred(:,n),'filled')
+            clim(c2);colormap(cmap)
+            xlabel('X'),ylabel('Y'),title('Residual (Obs. - Pred.)');subtitle(strcat('RMSE:',32,num2str(RMSE)))
+            colorbar()
+        end
     end
 
 elseif strcmp(FigType,'AutoCorr')
