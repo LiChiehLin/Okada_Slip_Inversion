@@ -10,6 +10,11 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.05.14)                                                    %
+%   Incorporating inversions using GNSS data. Jointly using both GNSS and %
+%   InSAR datasets is possible but the weighting matrix is still          %
+%   under-developed. You can manually make the weighting matrix for each  %
+%   dataset and input them as separated matrices.                         %
 % (Update: 2025.03.26)                                                    %
 %   Allowing putting weights on data. Users can use the covariance matrix %
 %   made in okInSARCov.m and okMakeInSARCovMat.m                          %
@@ -123,6 +128,8 @@ LocalY = cell(N,1);
 Weight = cell(N,1);
 G = cell(GR,GC);
 DisplN = zeros(N,1);
+Dtype = cell(N,2);
+Dlength = nan(N,1);
 % If the input Green's function datasets only occupy 1 column, then it will
 % assume this is only solving for 1 slip with an uniform rake angle. The
 % slip model output will not include the rake and total slip fields
@@ -141,43 +148,80 @@ for i = 1:N
         tmpDisplDataset = Dataset{i};
     end
 
-    Displtmp = tmpStruct.(tmpDisplDataset).Displ;
-    LocalXtmp = tmpStruct.(tmpDisplDataset).LocalX;
-    LocalYtmp = tmpStruct.(tmpDisplDataset).LocalY;
+    Dtype{i,1} = tmpStruct.DataType;
+    % Get the displacement Green's function and coordinates
+    if strcmp(tmpStruct.DataType,'InSAR')
+        Displtmp = tmpStruct.(tmpDisplDataset).Displ;
+        LocalXtmp = tmpStruct.(tmpDisplDataset).LocalX;
+        LocalYtmp = tmpStruct.(tmpDisplDataset).LocalY;
+        rmNaN = find(~isnan(Displtmp));
+
+        % Store the displacement and coordinates
+        Displ{i} = reshape(Displtmp(rmNaN),[],1);
+        LocalX{i} = reshape(LocalXtmp(rmNaN),[],1);
+        LocalY{i} = reshape(LocalYtmp(rmNaN),[],1);
+
+        % Link displacement with its associated Green's function
+        LinkInd = find(i == floor(GreenFuncPosition./10));
+        for j = LinkInd
+            GInd = GreenFuncPosition(j);
+            Grow = floor(GInd/10);
+            Gcol = mod(GInd,10);
+            tmpGreenDataset = GreenFuncDataset{j};
+            Gtmp = FaultModel.(tmpGreenDataset);  
+            Gtmp = Gtmp(rmNaN,:);
+    
+            % Store in pre-allocated cell
+            G{Grow,Gcol} = Gtmp;
+        end
+        
+    elseif strcmp(tmpStruct.DataType,'GNSS')
+        Etmp = tmpStruct.(tmpDisplDataset).DisplEW;
+        Ntmp = tmpStruct.(tmpDisplDataset).DisplNS;
+        Utmp = tmpStruct.(tmpDisplDataset).DisplUD;
+        Displtmp = [Etmp(:);Ntmp(:);Utmp(:)];
+        LocalXtmp = tmpStruct.(tmpDisplDataset).LocalX;
+        LocalXtmp = repmat(LocalXtmp,3,1);
+        LocalYtmp = tmpStruct.(tmpDisplDataset).LocalY;
+        LocalYtmp = repmat(LocalYtmp,3,1);
+        rmNaN = find(~isnan(Displtmp));
+
+        % Store the displacement and coordinates
+        Displ{i} = reshape(Displtmp(rmNaN),[],1);
+        LocalX{i} = reshape(LocalXtmp(rmNaN),[],1);
+        LocalY{i} = reshape(LocalYtmp(rmNaN),[],1);
+
+        % Link displacement with its associated Green's function
+        LinkInd = find(i == floor(GreenFuncPosition./10));
+        for j = LinkInd
+            GInd = GreenFuncPosition(j);
+            Grow = floor(GInd/10);
+            Gcol = mod(GInd,10);
+            tmpGreenDataset = GreenFuncDataset{j};
+            GEtmp = FaultModel.(tmpGreenDataset).E;
+            GNtmp = FaultModel.(tmpGreenDataset).N;
+            GUtmp = FaultModel.(tmpGreenDataset).U;
+            Gtmp = [GEtmp;GNtmp;GUtmp];
+            Gtmp = Gtmp(rmNaN,:);
+    
+            % Store in pre-allocated cell
+            G{Grow,Gcol} = Gtmp;
+        end
+    end
     LonOrigin = tmpStruct.(tmpDisplDataset).LongitudeOrigin;
     
-
-    % Remove NaN values
-    rmNaN = find(~isnan(Displtmp));
-    Displ{i} = reshape(Displtmp(rmNaN),[],1);
-    LocalX{i} = reshape(LocalXtmp(rmNaN),[],1);
-    LocalY{i} = reshape(LocalYtmp(rmNaN),[],1);
-    
-
-    % Link displacement with its associated Green's function
-    LinkInd = find(i == floor(GreenFuncPosition./10));
-    for j = LinkInd
-        GInd = GreenFuncPosition(j);
-        Grow = floor(GInd/10);
-        Gcol = mod(GInd,10);
-        tmpGreenDataset = GreenFuncDataset{j};
-        Gtmp = FaultModel.(tmpGreenDataset);  
-        Gtmp = Gtmp(rmNaN,:);
-
-        % Store in pre-allocated cell
-        G{Grow,Gcol} = Gtmp;
-    end
 
     % Deal with the weighting 
     if ~isempty(WeightParse)
         if N == 1 && ischar(WeightParse) && ~isempty(WeightParse)
             tmpWeightDataset = WeightParse;
-        elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse)
+            Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
+        elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse) && ischar(WeightParse{i})
             tmpWeightDataset = WeightParse{i};
+            Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
+        elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse) && isnumeric(WeightParse{i})
+            Weighttmp = WeightParse{i};
         end
-
-    % Retrieve data
-    Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
 
     % Remove NaN values
     Weight{i} = Weighttmp(rmNaN,:);
@@ -186,8 +230,17 @@ for i = 1:N
     DisplN(i) = size(Weighttmp,1);
     end
 
+    % Length of this dataset
+    Dlength(i) = length(Displ{i});
+
     
 end
+% Calculate the indices of data
+tmp = [0;cumsum(Dlength)];
+for i = 1:N
+    Dtype{i,2} = tmp(i)+1:tmp(i+1);
+end
+
 % Unpack the arranged stuff
 Displ = cell2mat(Displ);
 LocalX = cell2mat(LocalX);
@@ -320,6 +373,7 @@ ModelSlip.GreenFunc = G;
 ModelSlip.SmoothMat = S;
 ModelSlip.SmoothParam = SmoothParam;
 ModelSlip.SourceDispl = Dataset;
+ModelSlip.DataType = Dtype;
 ModelSlip.FaultModel = FaultModel;
 ModelSlip.ModelPrediction = ModelPrediction;
 ModelSlip.RMSE = RMSE;
