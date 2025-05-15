@@ -2,13 +2,16 @@
 This is a suite of Matlab routines for using InSAR data to invert for fault slip using Okada solution [(Okada, 1985)](https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782/Surface-deformation-due-to-shear-and-tensile).  
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
+- Update on May 15, 2025:   
+Currently supports GNSS data for slip inversion
 
-See [Example_elazig_SinglePlane/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Example_elazig_SinglePlane) for a simple tutorial/demo on how to use these stuff!  
+See [Example_elazig_SinglePlane/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Example_elazig_SinglePlane) for a simple demo on how to use these stuff with InSAR data.  
+See [Example_Parkfield_SinglePlane](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Example_Parkfield_SinglePlane) for a simple demo on how to use these with GNSS data.  
 See also [Codes/](https://github.com/LiChiehLin/Okada_Slip_Inversion/tree/main/Codes) for more explanations if you wish to know more about the nuts and bolts of the functions!  
 
 ---
 ### A little side notes:  
-This is the final project for GEO244 ***Space Geodesy*** lectured by Gareth at UC, Riverside.  
+This is the final project for GEO244 ***Space Geodesy*** lectured by *Prof.* Gareth Funning at UC, Riverside.  
   
 I felt rather difficult to find a simple and holisitc tutorial on how to perform Okada slip inversions despite this method has been around for almost 40 years!  
 After all, it is actually not a difficult task if we are not dealing with sophisticated fault geometries or fancy maths. Therefore, I thought it will be nice to make it public available for others like me who wanted to learn Okada fault slip inversion but had nowhere to start with.   
