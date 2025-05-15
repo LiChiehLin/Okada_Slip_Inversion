@@ -22,6 +22,7 @@ It is highly recommended to use this plotting function to have a look of the stu
   * Slip model structure (`SlipModel`)
 * FigType: ***Character.*** Input what to plot. This is has to work with the input `DataStruct`. You cannot plot something that is not related to the data input  
   * '***Displ***': Plot displacement (`DataStruct`)
+  * '***GNSS***': Plot GNSS displacement vectors (`DataStruct`)
   * '***Azimuth***': Plot azimuth anlge (`DataStruct`)
   * '***Incidence***': Plot incidence angle (`DataStruct`)
   * '***FaultModel***': Plot the fault model (`FaultModel`), use with sub-option `'displ'`
@@ -37,7 +38,7 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'cmap': ***Character.***: Input the colormap (default: 'default')
 * 'displ': ***Structure or matrix***: Input the displacement, works with `FigType='FaultModel'`
 * 'markersize': ***Numeric.***: Input the size of the scatter plot (default: 5)
-* 'dset': ***Character.***: Input the dataset to be plotted, works with `FigType='GreenFunc'`
+* 'dset': ***Character.***: Input the dataset to be plotted, works with `FigType='GreenFunc' & 'Inversion'` (default: 0)
 * 'n': ***Numeric.***: Input which inversion result to plot, works with `FigType='Inversion'`
 * 'residual': ***Numeric.***: Input whether or not plot the residual, works with `FigType='Inversion'` (default: 0)
 * 'lcurve': ***Numeric.***: Input whether or not plot the L-curve, works with `FigType='Inversion'` (default: 0)
@@ -47,6 +48,8 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'rake': ***Numeric.***: Input whether or not plot the rake inversion, works with `FigType='Inversion'` (default: 0)
 * 'func': ***Character or cell of character.***: Input the fitted functions to be plotted, works with `FigType='AutoCorr'` (default: Plot all functions)
 * 'one': ***Numeric.***: Input to plot the fitted functions in 1 figure or separate figures, works with `FigType='AutoCorr'` (default: 1)
+* 'scale': ***Numeric***: Input the scaling factor for visualizing the GNSS vectors, works with `FigType='GNSS'` (default: 1)
+* 'LineWidth': ***Numeric***: Input the line width of the GNSS vectors, works with `FigType='GNSS'` (default: 0.5)
 
 ### FigType = '***Displ***' || '***Azimuth***' || '***Incidence***'
 ```matlab
