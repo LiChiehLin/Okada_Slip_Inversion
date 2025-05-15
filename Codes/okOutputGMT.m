@@ -19,7 +19,7 @@
 % 2. OutType: Character. Specify the output dataset. See below            %
 %    2.1. 'slip': Fault slip distribution. 2 files will be produced:      %
 %         "_Solution.txt": The slip inversion parameters                  %
-%         "_GMT.txt": GMT compatible file (psxy -L)                       %
+%         "_GMT.txt": GMT compatible file (psxy -L -C)                    %
 %    2.2. 'lcurve': The L-curve search result                             %
 %         "_Lcurve.txt"                                                   %
 %    2.3. 'displ': The displacement and model prediction                  %
@@ -260,7 +260,6 @@ end
 
 
 end
-
 
 
 
