@@ -2,8 +2,8 @@
 This is a suite of Matlab routines for using InSAR/GNSS data to invert for the fault slip using the Okada solution [(Okada, 1985)](https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782/Surface-deformation-due-to-shear-and-tensile).  
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
-- Update on Aug 21, 2025:
-Fix bug in `okMakeFaultModel` when PatchDip is 1. Now it supports either PatchStrike is 1 or PatchDip is 1
+- Update on Aug 21, 2025:  
+Fix bug in `okMakeFaultModel` when PatchDip is 1. Now it supports either **PatchStrike** is 1 or **PatchDip** is 1
 
 - Update on May 15, 2025:   
 Currently supports GNSS data for slip inversion
