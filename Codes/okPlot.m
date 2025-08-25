@@ -589,7 +589,7 @@ elseif strcmp(FigType,'GreenFunc')
 
         end
     else
-        erorr('Cannot find input Green function field name')
+        error('Cannot find input Green function field name')
     end
 
 elseif strcmp(FigType,'Smooth')
