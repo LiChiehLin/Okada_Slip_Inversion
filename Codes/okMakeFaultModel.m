@@ -10,7 +10,7 @@
 %             ***           okMakeFaultModel.m            ***             %
 %             ***********************************************             %
 %                                                                         %
-% (Update: 2025.08.22)                                                    %
+% (Update: 2025.08.21)                                                    %
 %   Fix bug when PatchDip is 1. Now it supports:                          %
 %     Mx1: (M along-strike, 1 along-dip)                                  %
 %     1xN: (1 along-strike, M along-dip)                                  %
