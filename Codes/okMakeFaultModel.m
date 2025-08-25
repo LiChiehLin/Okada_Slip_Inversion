@@ -10,6 +10,12 @@
 %             ***           okMakeFaultModel.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.08.22)                                                    %
+%   Fix bug when PatchDip is 1. Now it supports:                          %
+%     Mx1: (M along-strike, 1 along-dip)                                  %
+%     1xN: (1 along-strike, M along-dip)                                  %
+%     MxN: (M along-strike, N along-dip)                                  %
+%                                                                         %
 % Make discrtized fault patches for running okada slip inversion          %
 %                                                                         %
 %-------------------------------------------------------------------------%
@@ -55,6 +61,7 @@ DepthSeg = StartXYZ(3):DepthInv:Depth-DepthInv;
 Str = -Strike+90; % To comform with MatLab 
 ASPatchSize = Length/PatchStrike;
 ADPatchSize = Width/PatchDip;
+ZPatchDip1 = Depth; % For down-dip only 1 patch length
 
 disp(' ')
 disp('******* Constructing fault model okMakeFaultModel.m *******')
@@ -122,9 +129,16 @@ FaultNum = zeros(1,(PatchStrike)*(PatchDip));
 for i = 1:(PatchStrike)*(PatchDip)   
     XincAS = Nodes(2,1) - Nodes(1,1);
     YincAS = Nodes(2,2) - Nodes(1,2);
-    XincAD = Nodes(PatchStrike+1,1) - Nodes(1,1);
-    YincAD = Nodes(PatchStrike+1,2) - Nodes(1,2);
-    ZincAD = Nodes(PatchStrike+1,3) - Nodes(1,3);
+    if PatchDip == 1
+        % If the down-dip direction only have one patch long
+        XincAD = 0;
+        YincAD = 0;
+        ZincAD = ZPatchDip1;
+    else
+        XincAD = Nodes(PatchStrike+1,1) - Nodes(1,1);
+        YincAD = Nodes(PatchStrike+1,2) - Nodes(1,2);
+        ZincAD = Nodes(PatchStrike+1,3) - Nodes(1,3);
+    end
     FaultNum(i) = i;
     if (mod(i,PatchStrike) ~= 0) && (i <= PatchStrike*(PatchDip-1))
         % Inner nodes
@@ -217,8 +231,3 @@ FaultModel.PatchCountDip = PatchDip;
 FaultModel.TotalPatchCount = PatchStrike*PatchDip;
 
 end
-
-
-
-
-
