@@ -3,7 +3,8 @@ This is a suite of Matlab routines for using InSAR/GNSS data to invert for the f
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
 - Update on Aug 21, 2025:  
-Fix bug in `okMakeFaultModel` when PatchDip is 1. Now it supports either **PatchStrike** is 1 or **PatchDip** is 1
+Fix bug in `okMakeFaultModel` when PatchDip is 1. Now it supports either **PatchStrike** is 1 or **PatchDip** is 1  
+Typo in `okPlot.m`  
 
 - Update on May 15, 2025:   
 Currently supports GNSS data for slip inversion
