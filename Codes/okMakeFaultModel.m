@@ -126,9 +126,15 @@ XPatch = zeros(4,(PatchStrike)*(PatchDip));
 YPatch = zeros(4,(PatchStrike)*(PatchDip));
 ZPatch = zeros(4,(PatchStrike)*(PatchDip));
 FaultNum = zeros(1,(PatchStrike)*(PatchDip));
-for i = 1:(PatchStrike)*(PatchDip)   
-    XincAS = Nodes(2,1) - Nodes(1,1);
-    YincAS = Nodes(2,2) - Nodes(1,2);
+for i = 1:(PatchStrike)*(PatchDip)
+    if PatchStrike == 1
+        % If the strike direction only have one patch long
+        XincAS = xinc;
+        YincAS = yinc;
+    else
+        XincAS = Nodes(2,1) - Nodes(1,1);
+        YincAS = Nodes(2,2) - Nodes(1,2);
+    end
     if PatchDip == 1
         % If the down-dip direction only have one patch long
         XincAD = 0;
