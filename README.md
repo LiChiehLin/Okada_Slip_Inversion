@@ -5,7 +5,7 @@ The fundamental Okada solution is from **François Beauducel** [okada85.m](https
 - Update on Sep 17, 2025 (Major updates on a couple of things):
   * `okCombineFaultModel.m`  
     Supports building fault models with varied patch sizes. Please combine models along-strike first and then along-dip.  
-    ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/51d57202032597db612ebf0d77a06e3fdeaa9921/Figure/okCombineFaultModel.png)
+    ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/b2ef940fe97d4c59d0e39aebfdabb9242ea250de/Figure/okCombineFaultModel.png)
   * `okMakeSmoothMat.m`
     Supports building smoothing matrix with their actual centroid distances. Options are:  
     ***'equidist'*** (default)  
