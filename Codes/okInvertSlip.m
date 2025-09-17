@@ -10,6 +10,21 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.09.17)                                                    %
+%   Adding different solvers and allowing solving only strike-slip or     %
+%   dip-slip.                                                             %
+%   'lsq': Least squares (default)                                        %
+%   'nnlsq': Non-negative least squares (Matlab built-in "lsqnonneg")     %
+%   'fnnlsq': Fast non-negative least squares (From Bill Whiten)          %
+%     Bill Whiten (2025). nnls - Non negative least squares               %
+%     https://www.mathworks.com/matlabcentral/fileexchange/               %
+%     38003-nnls-non-negative-least-squares)                              %
+%   Also supports setting bounds to the solutions                         %
+%   'lb': Lower bound (vector length should be the same as the solutions) %
+%   'ub': Upper bound (vector length should be the same as the solutions) %
+%   Note: Always input "GreenFuncDataset" as a cell variable even if you  %
+%     only have 1 Green's function to solve for                           %
+%                                                                         %
 % (Update: 2025.05.14)                                                    %
 %   Incorporating inversions using GNSS data. Jointly using both GNSS and %
 %   InSAR datasets is possible but the weighting matrix is still          %
@@ -33,8 +48,8 @@
 % 2. Dataset: Character or cell of character. The Field that is going to  %
 %    be used in DataStruct. Be paired with DataStruct                     %
 % 3. FaultModel: Strucuture. The fault geomtery data strucuture           %
-% 4. GreenFuncDataset: Character or cell of character. Green's function   %
-%    field names. Be paired with DataStruct                               %
+% 4. GreenFuncDataset: cell of character. Green's function field names    %
+%    Be paired with DataStruct                                            %
 % 5. GreenFuncPosition: Matrix or vector. Specify how the Green's         %
 %    function should be arranged in the design matrix (matrix indices)    %
 %    This is used in 2 scenarios: (See below and Examples)                %
@@ -43,16 +58,21 @@
 % 6. SmoothMatDataset: Character or cell of character. Smoothing matrix   %
 %    field names                                                          %
 % 7. varargin (Name-value pair)                                           %
-%    7.1. 'solver': 'lsq' or 'nnlsq' (default: lsq)                       %
+%    7.1. 'solver': 'lsq','nnlsq' or 'fnnlsq' (default: lsq)              %
 %         'lsq': Least-squares                                            %
 %         'nnlsq': Non-negative least squares                             %
+%         'fnnlsq': Fast non-negative least squares                       %
 %    7.2. 'smoothsearch': Vector for the smoothing constant search        %
 %         (default: 1e-10~1e4)                                            %
 %    7.3. 'weight': Characters or matrix (default: uniform weighting)     %
+%    7.4. 'lb': Vector. length the same as solutions (default: no bounds) %
+%         'ub': Vector. (default: no bounds)                              %
+%         Note that "lb" and "ub" should be 1 length longer the patches   %
+%           count because this routine also solves for the offset constant%
 %                                                                         %
 % Example: (1 diplacement, 1 fault, uniform rake, Least squares)          %
 % ModelSlip = okInvertSlip(DataStruct,'Dsample', ...                      %
-%             FaultModel,'GreenLOS',[11],'SmoothMat', ...                 %
+%             FaultModel,{'GreenLOS'},[11],'SmoothMat', ...               %
 %             'solver','lsq')                                             %
 %                                                                         %
 % Example: (1 diplacement, 1 fault, strike-slip and dip-slip, Non-neg     %
@@ -100,15 +120,20 @@ n = -10:0.1:4;
 default_smoothsearch = transpose(10.^n);
 % For weighting
 default_weight = [];
-addParameter(p, 'solver', default_solver, @(x) ischar(x) && strcmp(x,'lsq') || strcmp(x,'nnlsq'));
+default_lb = [];
+default_ub = [];
+addParameter(p, 'solver', default_solver, @(x) ischar(x) && strcmp(x,'lsq') || strcmp(x,'nnlsq') || strcmp(x,'fnnlsq'));
 addParameter(p, 'smoothsearch', default_smoothsearch, @(x) isnumeric(x) && isvector(x));
 addParameter(p, 'weight', default_weight, @(x) ischar(x) || iscell(x) || ismatrix(x));
+addParameter(p, 'lb', default_lb, @(x) isnumeric(x) && isvector(x));
+addParameter(p, 'ub', default_ub, @(x) isnumeric(x) && isvector(x));
 
 parse(p, varargin{:});
 solver = p.Results.solver;
 SmoothParam = p.Results.smoothsearch;
 WeightParse = p.Results.weight;
-
+lb = p.Results.lb;
+ub = p.Results.ub;
 
 % Take care of the smoothing constant search
 if size(SmoothParam,1) < size(SmoothParam,2)
@@ -223,11 +248,11 @@ for i = 1:N
             Weighttmp = WeightParse{i};
         end
 
-    % Remove NaN values
-    Weight{i} = Weighttmp(rmNaN,:);
+        % Remove NaN values
+        Weight{i} = Weighttmp(rmNaN,:);
 
-    % Store data count
-    DisplN(i) = size(Weighttmp,1);
+        % Store data count
+        DisplN(i) = size(Weighttmp,1);
     end
 
     % Length of this dataset
@@ -267,7 +292,6 @@ end
 
 
 % Arrange smoothing matrix
-% Assume solving for strike-slip and dip-slip
 Stmp = FaultModel.(SmoothMatDataset);
 SmoothSize = size(Stmp,1);
 if SmoothSize ~= size(G,2)
@@ -284,19 +308,26 @@ else
 end
 
 % Get the patch sizes
-% Assuming solving for strike-slip and dip-slip
 ASPatchSize = FaultModel.AlongStrikePatchSize;
 ADPatchSize = FaultModel.AlongDipPatchSize;
 PatchSizetmp = ASPatchSize.*ADPatchSize;
 PatchCount = FaultModel.TotalPatchCount;
-TotalPatchCount = sum(PatchCount.*2);
 M = length(PatchCount);
 PatchSize = cell(M,1);
-for i = 1:M
-    PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i)*2,1);
+if flagslip2 == 1
+    % Solving both strike-slip and dip-slip
+    TotalPatchCount = sum(PatchCount.*2);
+    for i = 1:M
+        PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i)*2,1);
+    end
+else
+    % Solving only one
+    TotalPatchCount = sum(PatchCount);
+    for i = 1:M
+        PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i),1);
+    end
 end
 PatchSize = cell2mat(PatchSize);
-
 
 
 % Start inversion
@@ -319,10 +350,14 @@ for i = 1:length(SmoothParam)
 
     dtmp = inv(W)*Displ(:); % Put the weighting here 
     d = [dtmp;zeros(patM,1)];
-    if strcmp(solver,'lsq')
+    if strcmp(solver,'lsq') && isempty(lb) || isempty(ub)
         m = A\d;
-    elseif strcmp(solver,'nnlsq')
+    elseif strcmp(solver,'nnlsq') && isempty(lb) || isempty(ub)
         m = lsqnonneg(A,d);
+    elseif strcmp(solver,'fnnlsq') && isempty(lb) || isempty(ub)
+        m = nnls(A,d);
+    elseif strcmp(solver,'lsq') && ~isempty(lb) || ~isempty(ub)
+        m = lsqlin(A,d,[],[],[],[],lb,ub,[]);
     end
     % Calculate resolution matrix
     Resol = (A'*A)\(A'*A);
