@@ -10,6 +10,9 @@
 %             ***                okPlot.m                 ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.09.15)                                                     %
+%   Add 1 FaultModel figure option: fnum                                  %
+%   Plot the patch number at its patch centroid                           %
 % (Update 2025.05.13)                                                     %
 %   Add 1 figure type:                                                    %
 %   1. GNSS: Plot the GNSS measurements                                   %
@@ -80,10 +83,12 @@
 % 'title': Figure title                                                   %
 % 'GNSS': Plot GNSS measurement on top of the fault model                 %
 % 'scale': Multiplier for visualization                                   %
+% 'fnum': To plot the patch number or not                                 %
 % okPlot(FaultModel,'FaultModel','displ','DataStruct.Subset', ...         %
 %   'clim',[-2 2])                                                        %
 % okPlot(FaultModel,'FaultModel','GNSS','DataStruct.Original', ...        %
 %   'scale',1000)                                                         %
+% okPlot(FaultModel,'FaultModel','fnum',1)                                %
 %                                                                         %
 % FigType = 'Dsample'                                                     %
 % 'clim': Colorbar limits                                                 %
@@ -167,6 +172,7 @@ default_func = [];
 default_one = 0;
 default_scale = 1;
 default_linewidth = 0.5;
+default_fnum = 0;
 
 addParameter(p, 'title', default_title, @(x) ischar(x));
 addParameter(p, 'clim', default_clim, @(x) isnumeric(x) && length(x)==2 && x(1)<x(2));
@@ -186,6 +192,7 @@ addParameter(p, 'one', default_one, @(x) isnumeric(x) && x==0 || x==1);
 addParameter(p, 'scale', default_scale, @(x) isnumeric(x));
 addParameter(p, 'GNSS', default_displ, @(x) isstruct(x));
 addParameter(p, 'LineWidth', default_linewidth, @(x) isnumeric(x) && x > 0);
+addParameter(p, 'fnum', default_fnum, @(x) isnumeric(x) && x==0 || x==1);
 
 parse(p, varargin{:});
 
@@ -426,6 +433,7 @@ elseif strcmp(FigType,'FaultModel')
     t = p.Results.title;
     GNSSParse = p.Results.GNSS;
     scale = p.Results.scale;
+    fnum = p.Results.fnum;
 
     % Determine whether plot InSAR field or GNSS
     if isstruct(DisplParse)
@@ -454,7 +462,7 @@ elseif strcmp(FigType,'FaultModel')
     end
 
     % Make color limits
-    if c==0 && DisplFlag == 1
+    if c==0 && DisplFlag==1
         c = [min(Displ(:)),max(Displ(:))];
     end
 
@@ -475,7 +483,12 @@ elseif strcmp(FigType,'FaultModel')
         quiver3(X,Y,zeros(length(X),1),zeros(length(X),1),zeros(length(X),1),UDdispl*scale,'r')
     end
     fill3(PatchX,PatchY,PatchZ,'black','FaceAlpha',0.3,'EdgeColor','k')
-    scatter3(okFault(:,1),okFault(:,2),okFault(:,3),'r.')
+    if fnum == 0 
+        scatter3(okFault(:,1),okFault(:,2),okFault(:,3),'r.')
+    else
+        text(okFault(:,1),okFault(:,2),okFault(:,3),num2str(okFault(:,end)), ...
+            'HorizontalAlignment','center');
+    end
     xlabel('X');ylabel('Y');zlabel('Depth (m)')
     colorbar();
     hold off
