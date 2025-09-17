@@ -278,7 +278,7 @@ Combined = okCombineFaultModel({FaultModel1,FaultModel2},Direction);
 
 okPlot(Combined,'FaultModel','fnum',1);
 ```
-![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/c644b6744d2f572133ddb7de82b07eeb7bbfa4be/Figure/okCombineFaultModel.png)
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/b2ef940fe97d4c59d0e39aebfdabb9242ea250de/Figure/okCombineFaultModel.png)
 ---
 
 ### 9. okMakeGreenFunc.m
