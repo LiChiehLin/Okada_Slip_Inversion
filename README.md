@@ -2,8 +2,23 @@
 This is a suite of Matlab routines for using InSAR/GNSS data to invert for the fault slip using the Okada solution [(Okada, 1985)](https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782/Surface-deformation-due-to-shear-and-tensile).  
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
+- Update on Sep 17, 2025 (Major updates on a couple of things):
+  * `okCombineFaultModel.m`  
+    Supports building fault models with varied patch sizes. Please combine models along-strike first and then along-dip.  
+    ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/51d57202032597db612ebf0d77a06e3fdeaa9921/Figure/okCombineFaultModel.png)
+  * `okMakeSmoothMat.m`
+    Supports building smoothing matrix with their actual centroid distances. Options are:  
+    ***'equidist'*** (default)  
+    ***'dist-weighted'***  
+    ***'dist-based'***
+  * `okInvertSlip.m`  
+    Allows putting lower and upper bounds to the solution.  
+    Include another solver: Fast Non-negative Least Squares. [nnls, Bill Whiten (2025)](https://www.mathworks.com/matlabcentral/fileexchange/38003-nnls-non-negative-least-squares)
+  * `okPlot.m`  
+    Added a feature for plotting the patch numbers at the centroids (See above).  
+
 - Update on Aug 21, 2025:  
-Fix bug in `okMakeFaultModel` when PatchDip is 1. Now it supports either **PatchStrike** is 1 or **PatchDip** is 1  
+Fix bug in `okMakeFaultModel.m` when PatchDip is 1. Now it supports either **PatchStrike** is 1 or **PatchDip** is 1  
 Typo in `okPlot.m`  
 
 - Update on May 15, 2025:   
