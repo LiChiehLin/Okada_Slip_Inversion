@@ -37,6 +37,7 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'clim': ***Vector.***: Input the colorbar limits
 * 'cmap': ***Character.***: Input the colormap (default: 'default')
 * 'displ': ***Structure or matrix***: Input the displacement, works with `FigType='FaultModel'`
+* 'fnum': ***Numeric***: Input whether or not plot the patch number, works with `FigType='FaultModel'` (default: 0)
 * 'markersize': ***Numeric.***: Input the size of the scatter plot (default: 5)
 * 'dset': ***Character.***: Input the dataset to be plotted, works with `FigType='GreenFunc' & 'Inversion'` (default: 0)
 * 'n': ***Numeric.***: Input which inversion result to plot, works with `FigType='Inversion'`
@@ -245,7 +246,7 @@ DataStruct = okDsample(DataStruct,'Subset',DsampleParam);
 DataStruct = okMakeInSARCovMat(DataStruct,'Dsample','exp1');
 ```
 
-### 8. okMakeFaultModel.m
+### 8.1 okMakeFaultModel.m
 * #### To make the fault geometry
 #### Positional input:
 * StartXYZ: ***Vector.***: Input the coordinate of the starting point of the fault patch
@@ -265,6 +266,19 @@ PatchStrike = 24;
 PatchDip = 8;
 FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,PatchDip);
 ```
+
+### 8.2 okCombineFaultModel.m
+* #### To combine fault models with different patch sizes
+#### Positional input:
+* FaultModels: ***Cell.***: Input the fault models created from `okMakeFaultModel.m`
+* Direction: ***String***: Input the direction of combining two faults
+```matlab
+Direction = 'strike';
+Combined = okCombineFaultModel({FaultModel1,FaultModel2},Direction);
+
+okPlot(Combined,'FaultModel','fnum',1);
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/c644b6744d2f572133ddb7de82b07eeb7bbfa4be/Figure/okCombineFaultModel.png)
 ---
 
 ### 9. okMakeGreenFunc.m
@@ -301,12 +315,16 @@ FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS
 
 ### 10. okMakeSmoothMat.m
 * #### To make the smoothing matrix  
-Currently there is only the 2D Laplacian smoother.  
-I am open to any smoother recommendations for future versions! Please let me know!  
 #### Positional input:
 * FaultModel: ***Structure.***: Input FaultModel
+#### Name-Value pairs:
+* 'method': ***Character.***: Input the smoothing criterion
+  * equidist: Treating all patches the same sizes and constant smoothing without considering the distance between them
+  * dist-weighted: Smooth connected patches and weight them with their centroid distances
+  * dist-based: Smooth all patches within the distance threshould and weight them with their centroid distances
+* 'dist': ***Numeric.***: Input the distance threshold (Use with `dist-based` option)
 ```matlab
-FaultModel = okMakeSmoothMat(FaultModel);
+FaultModel = okMakeSmoothMat(FaultModel,'method','dist-weighted');
 ```
 ---
 
@@ -325,8 +343,11 @@ See below for different function input for different usages:
 * 'solver': ***Character.***: Input the inversion solver
   * lsq: Ordinary Least Squares (default)
   * nnlsq: Non-negative Least Squares
+  * fnnlsq: Fast non-negative Least Squares (From Bill Whiten (2025). nnls - Non negative least squares (https://www.mathworks.com/matlabcentral/fileexchange/38003-nnls-non-negative-least-squares), MATLAB Central File Exchange. Retrieved September 17, 2025.)
 * 'smoothsearch': ***Vector.***: Input the search range of the smoothing constant (Leave blank to use the default one)
-* 'weight': ***Character or cell of character or matrix***: Input the weighting matrix. It can be the covariance matrix made in `okMakeInSARCovMat.m` or user defined weighting matrix (Leave blank to assume uniform weighting)
+* 'weight': ***Character or cell of character or matrix.***: Input the weighting matrix. It can be the covariance matrix made in `okMakeInSARCovMat.m` or user defined weighting matrix (Leave blank to assume uniform weighting)
+* 'lb': ***Vector.***: Input the lower bounds of the solutions
+* 'ub': ***Vector.***: Input the upper bounds of the solutions
   
 ### Case 1: 1 LOS displacement, 2 Green's functions, InSAR covaraince matrix as data weights
 This is a very common case for InSAR users to invert for fault slip. Here's how the matrices should be placed and the way this function is designed:  
@@ -407,9 +428,6 @@ SlipModel = okInvertSlip({DataStructAsc,DataStructDes},{'Dsample','Dsample'}, ..
     'smoothsearch',SmoothParam, ...
     'weight',{'Covariance','Covariance'});
 ```
-
-### Case 3: 2 LOS displacements, 1 Green's function
-If you wish to only solve for fault slip at certain rake angle, please still input 2 Green's functions, just set the `Slip` argument to 0 when generating the Green's function  
 
 ---
 
