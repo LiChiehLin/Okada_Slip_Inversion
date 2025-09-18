@@ -10,7 +10,8 @@ The fundamental Okada solution is from **François Beauducel** [okada85.m](https
     Supports building smoothing matrix with their actual centroid distances. Options are:  
     ***'equidist'*** (default)  
     ***'dist-weighted'***  
-    ***'dist-based'***
+    ***'dist-based'***  
+    ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/ff0ceb5d2e5fa124138f32384b482fe894be054e/Figure/okMakeSmoothMat.png)  
   * `okInvertSlip.m`  
     Allows putting lower and upper bounds to the solution.  
     Include another solver: Fast Non-negative Least Squares. [nnls, Bill Whiten (2025)](https://www.mathworks.com/matlabcentral/fileexchange/38003-nnls-non-negative-least-squares)
