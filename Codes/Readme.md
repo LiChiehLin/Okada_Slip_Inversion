@@ -40,7 +40,7 @@ It is highly recommended to use this plotting function to have a look of the stu
 * 'fnum': ***Numeric***: Input whether or not plot the patch number, works with `FigType='FaultModel'` (default: 0)
 * 'markersize': ***Numeric.***: Input the size of the scatter plot (default: 5)
 * 'dset': ***Character.***: Input the dataset to be plotted, works with `FigType='GreenFunc' & 'Inversion'` (default: 0)
-* 'n': ***Numeric.***: Input which inversion result to plot, works with `FigType='Inversion'`
+* 'n': ***Numeric.***: Input which inversion result to plot, works with `FigType='Inversion' & 'Smooth'`
 * 'residual': ***Numeric.***: Input whether or not plot the residual, works with `FigType='Inversion'` (default: 0)
 * 'lcurve': ***Numeric.***: Input whether or not plot the L-curve, works with `FigType='Inversion'` (default: 0)
 * 'slip1': ***Numeric.***: Input whether or not plot the first fault slip inversion, works with `FigType='Inversion'` (default: 0)
