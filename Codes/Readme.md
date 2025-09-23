@@ -80,7 +80,11 @@ okPlot(FaultModel,'GreenFunc','dset','GreenSS', ...
 ```matlab
 okPlot(FaultModel,'Smooth')
 ```
-![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/5dd3cffa3a7a4b8734354a4c1db6ed5e5acdc1e6/Figure/okPlot_Smooth.png)
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/5dd3cffa3a7a4b8734354a4c1db6ed5e5acdc1e6/Figure/okPlot_Smooth.png)  
+```matlab
+okPlot(FaultModel,'Smooth','n',41,'fnum',1)
+```
+![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/0a5525d992669068de099c62728d0ca0cd72f269/Figure/okPlot_Smooth_Patch.png)
 ### FigType = '***Inversion***'
 If `'n'` is not specified, the function will plot a several inversion results to give a quick skim
 ```matlab
