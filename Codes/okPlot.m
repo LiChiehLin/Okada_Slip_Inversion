@@ -10,6 +10,9 @@
 %             ***                okPlot.m                 ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.09.23)                                                     %
+%   Add 1 Smooth figure option: n                                         %
+%   Plot the patch smoothing                                              %
 % (Update 2025.09.15)                                                     %
 %   Add 1 FaultModel figure option: fnum                                  %
 %   Plot the patch number at its patch centroid                           %
@@ -111,7 +114,11 @@
 %                                                                         %
 % FigType = 'Smooth'                                                      %
 % 'title': Figure title                                                   %
+% 'n': Plot which patch's smoothing                                       %
+% 'fnum': To plot the patch number or not                                 %
 % okPlot(FaultModel,'Smooth')                                             %
+% okPlot(FaultModel,'Smooth','n',20)                                      %
+% okPlot(FaultModel,'Smooth','n',20,'fnum',1)                             %
 %                                                                         %
 % FigType = 'Inversion'                                                   %
 % 'residual': Plot the residual                                           %
@@ -608,10 +615,40 @@ elseif strcmp(FigType,'GreenFunc')
 elseif strcmp(FigType,'Smooth')
     S = DataStruct.SmoothMat;
     t = p.Results.title;
+    n = p.Results.n;
+    fnum = p.Results.fnum;
+    PatchX = DataStruct.PatchX;
+    PatchY = DataStruct.PatchY;
+    PatchZ = DataStruct.PatchZ;
+    okFault = DataStruct.okFault;
 
-    figure();title(t)
-    spy(S)
-    xlabel('Patch index');ylabel('Patch index')
+
+    if n == 0
+        figure();title(t)
+        disp('*** Plotting spy plot')
+        spy(S)
+        xlabel('Patch index');ylabel('Patch index')
+    elseif n ~=0 && fnum == 0
+        npat = find(S(n,:) ~= 0);
+        smc = nan(size(S,1),1);
+        smc(npat) = S(n,npat);
+
+        figure();title(t);colorbar()
+        disp('*** Plotting patch smoothing')
+        fill3(PatchX,PatchY,PatchZ,smc)
+        colorbar();
+    elseif n ~=0 && fnum == 1
+        npat = find(S(n,:) ~= 0);
+        smc = nan(size(S,1),1);
+        smc(npat) = S(n,npat);
+
+        figure();title(t);hold on
+        disp('*** Plotting patch smoothing with patch numbers')
+        fill3(PatchX,PatchY,PatchZ,smc)
+        text(okFault(:,1),okFault(:,2),okFault(:,3),num2str(okFault(:,end)), ...
+            'HorizontalAlignment','center');
+        colorbar();
+    end
 
 elseif strcmp(FigType,'Inversion')
     Lcurve = DataStruct.Lcurve;
