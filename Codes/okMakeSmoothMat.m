@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                                         %
 %                              Lin,Li-Chieh                               %
-%                       Earth and Planetary Sciences                      %
+%                       Earth and Planetary Sciences                      % 
 %                   University of California, Riverside                   %
 %                               2025.03.03                                %
 %                                                                         %
@@ -10,6 +10,9 @@
 %             ***            okMakeSmoothMat.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.09.26)                                                    %
+%  'dist-based': if cannot find patches within the distance, then smooth  %
+%  it with its connecting patches                                         %
 % (Update: 2025.09.14)                                                    %
 %   Allows three options:                                                 %
 %     1. 'equidist' (default):                                            %
@@ -44,12 +47,16 @@ p = inputParser;
 % Parse options for the smoothing matrix
 default_method = 'equidist';
 default_dist = [];
+default_tol = 1e-3;
 addParameter(p,'method',default_method, @(x) ischar(x) && (strcmp(x,'equidist') || strcmp(x,'dist-weighted') || strcmp(x,'dist-based')));
 addParameter(p,'dist',default_dist, @(x) isnumeric(x));
+addParameter(p,'tol',default_tol, @(x) isnumeric(x));
+
 
 parse(p, varargin{:});
 method = p.Results.method;
 dist = p.Results.dist;
+tol = p.Results.tol;
 
 % Check if "dist-based" option is put without the distance parameter
 if strcmp(method,'dist-based') && isempty(dist)
@@ -77,6 +84,7 @@ smFunc = method;
 disp(' ')
 disp("******* Constructing smoothing matrix okMakeSmoothMat.m *******")
 disp(strcat('*** Smoothing function:',32,smFunc))
+disp(strcat('*** Tolerance:',32,num2str(tol)))
 
 
 Dim = okFault(end,8);
@@ -175,8 +183,6 @@ elseif strcmp(method,'dist-weighted')
                 DA = [Dx-Ax;Dy-Ay;Dz-Az]';
     
                 % 1. Cross product to see if they are colinear
-                % Might need to put a tolerance here to avoid float number
-                % errors
                 ABcrossCA = vecnorm(cross(repmat(AB,[size(PatchX,2),1]),CA),2,2);
                 ABcrossDA = vecnorm(cross(repmat(AB,[size(PatchX,2),1]),DA),2,2);
     
@@ -199,7 +205,7 @@ elseif strcmp(method,'dist-weighted')
                 tmp = logical(tmp);
     
                 % Determine if they are neighbors
-                Neighborlogic = (ABcrossCA == 0) & (ABcrossDA == 0) & tmp;
+                Neighborlogic = (ABcrossCA < tol) & (ABcrossDA < tol) & tmp;
                 Neighborlogic(i) = false; % Maskout the current patch
                 Ind = find(Neighborlogic);
             
@@ -251,12 +257,87 @@ elseif strcmp(method,'dist-based')
         N = length(ntmp);
         NInd = ntmp(2:end);
 
-        % Invert the distance
-        Mindist = min(Distmat(i,NInd));
-        Maxdist = max(Distmat(i,NInd));
-        Ndist = Distmat(i,:);
-        Ndist = Maxdist + Mindist - Ndist;
-        Normfactor = sum(Ndist(NInd));
+        if ~isempty(NInd)
+            % Invert the distance
+            Mindist = min(Distmat(i,NInd));
+            Maxdist = max(Distmat(i,NInd));
+            Ndist = Distmat(i,:);
+            Ndist = Maxdist + Mindist - Ndist;
+            Normfactor = sum(Ndist(NInd));
+        else
+            % If no patches were found, then smooth with the one connected
+            % to it (Copy from the above)
+            for j = 1:4
+                AInd = j;
+                if j == 4
+                    BInd = 1;
+                else
+                    BInd = j + 1;
+                end
+                % These are the coordinates of the one looking for neighbors
+                Ax = PatchX(AInd,i); Bx = PatchX(BInd,i);
+                Ay = PatchY(AInd,i); By = PatchY(BInd,i);
+                Az = PatchZ(AInd,i); Bz = PatchZ(BInd,i);
+                AB = [Bx-Ax,By-Ay,Bz-Az];
+        
+                for k = 1:4
+                    % For each side of all other patches
+                    CInd = k;
+                    if k == 4
+                        DInd = 1;
+                    else
+                        DInd = k + 1;
+                    end
+                    % These are the coordinates of the searched sides
+                    Cx = PatchX(CInd,:); Dx = PatchX(DInd,:);
+                    Cy = PatchY(CInd,:); Dy = PatchY(DInd,:);
+                    Cz = PatchZ(CInd,:); Dz = PatchZ(DInd,:);
+        
+                    CA = [Cx-Ax;Cy-Ay;Cz-Az]';
+                    DA = [Dx-Ax;Dy-Ay;Dz-Az]';
+        
+                    % 1. Cross product to see if they are colinear
+                    % Might need to put a tolerance here to avoid float number
+                    % errors
+                    ABcrossCA = vecnorm(cross(repmat(AB,[size(PatchX,2),1]),CA),2,2);
+                    ABcrossDA = vecnorm(cross(repmat(AB,[size(PatchX,2),1]),DA),2,2);
+        
+                    % 2. Project onto the line
+                    unitvec = AB/norm(AB);
+            
+                    % 3. Set the bounds
+                    Abound = [0,dot(AB,unitvec)];
+                    Bbound = [dot(CA,repmat(unitvec,[size(PatchX,2),1]),2), dot(DA,repmat(unitvec,[size(PatchX,2),1]),2)];
+        
+                    % 4. Determine if they overlapped
+                    tmp = zeros(size(Bbound,1),1);
+                    for l = 1:size(tmp,1)
+                        if max([min(Abound),min(Bbound(l,:))]) < min([max(Abound),max(Bbound(l,:))])
+                            tmp(l) = true;
+                        else
+                            tmp(l) = false;
+                        end
+                    end
+                    tmp = logical(tmp);
+        
+                    % Determine if they are neighbors
+                    Neighborlogic = (ABcrossCA < tol) & (ABcrossDA < tol) & tmp;
+                    Neighborlogic(i) = false; % Maskout the current patch
+                    Ind = find(Neighborlogic);
+                
+                    % Store the patch number
+                    ntmp = [ntmp,Ind'];
+                end
+            end
+            % Invert the distance
+            N = length(ntmp);
+            NInd = ntmp(2:end);
+            Mindist = min(Distmat(i,NInd));
+            Maxdist = max(Distmat(i,NInd));
+            Ndist = Distmat(i,:);
+            Ndist = Maxdist + Mindist - Ndist;
+            Normfactor = sum(Ndist(NInd));
+        end
 
         % Calculate the Laplacian numbers
         Laplanum = (Ndist./Normfactor)*(N-1);
