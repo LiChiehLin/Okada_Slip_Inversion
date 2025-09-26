@@ -61,7 +61,7 @@ DepthSeg = StartXYZ(3):DepthInv:Depth-DepthInv;
 Str = -Strike+90; % To comform with MatLab 
 ASPatchSize = Length/PatchStrike;
 ADPatchSize = Width/PatchDip;
-ZPatchDip1 = Depth; % For down-dip only 1 patch length
+ZPatchDip1 = Depth - StartXYZ(3); % For down-dip only 1 patch length
 
 disp(' ')
 disp('******* Constructing fault model okMakeFaultModel.m *******')
