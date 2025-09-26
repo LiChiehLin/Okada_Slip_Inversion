@@ -10,6 +10,13 @@
 %             ***                okPlot.m                 ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.09.25)                                                     %
+%   Add color options for Fault Model plotting. Reduce the rendering for  %
+%   faster plotting                                                       %
+%   'FaceColor' (default: "none")                                         %
+%   'FaceAlpha' (default: 1)                                              %
+%   'EdgeColor' (default: "none")                                         %
+%   'LineStyle' (default: "-")                                            %
 % (Update 2025.09.23)                                                     %
 %   Add 1 Smooth figure option: n                                         %
 %   Plot the patch smoothing                                              %
@@ -87,11 +94,13 @@
 % 'GNSS': Plot GNSS measurement on top of the fault model                 %
 % 'scale': Multiplier for visualization                                   %
 % 'fnum': To plot the patch number or not                                 %
+% 'centroid': To plot the patch centroid or not                           %
 % okPlot(FaultModel,'FaultModel','displ','DataStruct.Subset', ...         %
 %   'clim',[-2 2])                                                        %
 % okPlot(FaultModel,'FaultModel','GNSS','DataStruct.Original', ...        %
 %   'scale',1000)                                                         %
 % okPlot(FaultModel,'FaultModel','fnum',1)                                %
+% okPlot(FaultModel,'FaultModel','fnum',1,'centroid',1)                   %
 %                                                                         %
 % FigType = 'Dsample'                                                     %
 % 'clim': Colorbar limits                                                 %
@@ -180,6 +189,11 @@ default_one = 0;
 default_scale = 1;
 default_linewidth = 0.5;
 default_fnum = 0;
+default_centroid = 0;
+default_FaceColor = "none";
+default_FaceAlpha = 1;
+default_EdgeColor = "none";
+default_LineStyle = "-";
 
 addParameter(p, 'title', default_title, @(x) ischar(x));
 addParameter(p, 'clim', default_clim, @(x) isnumeric(x) && length(x)==2 && x(1)<x(2));
@@ -188,18 +202,25 @@ addParameter(p, 'displ', default_displ, @(x) isstruct(x) || ismatrix(x));
 addParameter(p, 'MarkerSize', default_markersize, @(x) isnumeric(x));
 addParameter(p, 'dset', default_dset, @(x) ischar(x));
 addParameter(p, 'n', default_n, @(x) isnumeric(x));
-addParameter(p, 'residual', default_residual, @(x) isnumeric(x) && x==0 || x==1);
-addParameter(p, 'lcurve', default_lcurve, @(x) isnumeric(x) && x==0 || x==1);
-addParameter(p, 'slip1', default_slip1, @(x) isnumeric(x) && x==0 || x==1);
-addParameter(p, 'slip2', default_slip2, @(x) isnumeric(x) && x==0 || x==1);
-addParameter(p, 'totalslip', default_totalslip, @(x) isnumeric(x) && x==0 || x==1);
-addParameter(p, 'rake', default_rake, @(x) isnumeric(x) && x==0 || x==1);
+addParameter(p, 'residual', default_residual, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'lcurve', default_lcurve, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'slip1', default_slip1, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'slip2', default_slip2, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'totalslip', default_totalslip, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'rake', default_rake, @(x) isnumeric(x) && (x==0 || x==1));
 addParameter(p, 'func', default_func, @(x) ischar(x) || iscell(x));
-addParameter(p, 'one', default_one, @(x) isnumeric(x) && x==0 || x==1);
+addParameter(p, 'one', default_one, @(x) isnumeric(x) && (x==0 || x==1));
 addParameter(p, 'scale', default_scale, @(x) isnumeric(x));
 addParameter(p, 'GNSS', default_displ, @(x) isstruct(x));
 addParameter(p, 'LineWidth', default_linewidth, @(x) isnumeric(x) && x > 0);
-addParameter(p, 'fnum', default_fnum, @(x) isnumeric(x) && x==0 || x==1);
+addParameter(p, 'fnum', default_fnum, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'centroid', default_centroid, @(x) isnumeric(x) && (x==0 || x==1));
+addParameter(p, 'FaceColor', default_FaceColor, @(x) ischar(x));
+addParameter(p, 'FaceAlpha', default_FaceAlpha, @(x) isnumeric(x) && (x>=0 || x<=1));
+addParameter(p, 'EdgeColor', default_EdgeColor, @(x) ischar(x));
+addParameter(p, 'LineStyle', default_LineStyle, @(x) ischar(x));
+
+
 
 parse(p, varargin{:});
 
@@ -441,6 +462,11 @@ elseif strcmp(FigType,'FaultModel')
     GNSSParse = p.Results.GNSS;
     scale = p.Results.scale;
     fnum = p.Results.fnum;
+    centroid = p.Results.centroid;
+    FaceColor = p.Results.FaceColor;
+    FaceAlpha = p.Results.FaceAlpha;
+    EdgeColor = p.Results.EdgeColor;
+    LineStyle = p.Results.LineStyle;
 
     % Determine whether plot InSAR field or GNSS
     if isstruct(DisplParse)
@@ -489,10 +515,24 @@ elseif strcmp(FigType,'FaultModel')
         quiver3(X,Y,zeros(length(X),1),EWdispl*scale,NSdispl*scale,zeros(length(X),1),'b')
         quiver3(X,Y,zeros(length(X),1),zeros(length(X),1),zeros(length(X),1),UDdispl*scale,'r')
     end
-    fill3(PatchX,PatchY,PatchZ,'black','FaceAlpha',0.3,'EdgeColor','k')
-    if fnum == 0 
+
+    if strcmp(FaceColor,"none")
+        EdgeColor = 'black';
+    end
+    smc = nan(size(PatchX,2),1);
+    fill3(PatchX,PatchY,PatchZ,smc,...
+        'FaceColor',FaceColor, ...
+        'FaceAlpha',FaceAlpha, ...
+        'EdgeColor',EdgeColor, ...
+        'LineStyle',LineStyle)
+
+    if fnum == 0 && centroid == 1
         scatter3(okFault(:,1),okFault(:,2),okFault(:,3),'r.')
-    else
+    elseif fnum == 1 && centroid == 0
+        text(okFault(:,1),okFault(:,2),okFault(:,3),num2str(okFault(:,end)), ...
+            'HorizontalAlignment','center');
+    elseif fnum == 1 && centroid == 1
+        scatter3(okFault(:,1),okFault(:,2),okFault(:,3),'r.')
         text(okFault(:,1),okFault(:,2),okFault(:,3),num2str(okFault(:,end)), ...
             'HorizontalAlignment','center');
     end
@@ -617,11 +657,18 @@ elseif strcmp(FigType,'Smooth')
     t = p.Results.title;
     n = p.Results.n;
     fnum = p.Results.fnum;
+    FaceColor = p.Results.FaceColor;
+    FaceAlpha = p.Results.FaceAlpha;
+    EdgeColor = p.Results.EdgeColor;
+    LineStyle = p.Results.LineStyle;
     PatchX = DataStruct.PatchX;
     PatchY = DataStruct.PatchY;
     PatchZ = DataStruct.PatchZ;
     okFault = DataStruct.okFault;
 
+    if strcmp(FaceColor,"none")
+        EdgeColor = 'black';
+    end
 
     if n == 0
         figure();title(t)
