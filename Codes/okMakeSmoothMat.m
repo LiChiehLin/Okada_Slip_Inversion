@@ -196,7 +196,7 @@ elseif strcmp(method,'dist-weighted')
                 % 4. Determine if they overlapped
                 tmp = zeros(size(Bbound,1),1);
                 for l = 1:size(tmp,1)
-                    if max([min(Abound),min(Bbound(l,:))]) < min([max(Abound),max(Bbound(l,:))])
+                    if max([min(Abound),min(Bbound(l,:))]) + tol < min([max(Abound),max(Bbound(l,:))])
                         tmp(l) = true;
                     else
                         tmp(l) = false;
@@ -312,7 +312,7 @@ elseif strcmp(method,'dist-based')
                     % 4. Determine if they overlapped
                     tmp = zeros(size(Bbound,1),1);
                     for l = 1:size(tmp,1)
-                        if max([min(Abound),min(Bbound(l,:))]) < min([max(Abound),max(Bbound(l,:))])
+                        if max([min(Abound),min(Bbound(l,:))]) + tol < min([max(Abound),max(Bbound(l,:))])
                             tmp(l) = true;
                         else
                             tmp(l) = false;
