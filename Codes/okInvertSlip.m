@@ -239,12 +239,22 @@ for i = 1:N
     % Deal with the weighting 
     if ~isempty(WeightParse)
         if N == 1 && ischar(WeightParse) && ~isempty(WeightParse)
+            % If the weight is a field in the data structure, and it has
+            % only 1 field that describes the weights
             tmpWeightDataset = WeightParse;
             Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
+        elseif N == 1 && ~ischar(WeightParse) && ~isempty(WeightParse)
+            % If the weight input is a matrix describing the weights
+            Weighttmp = WeightParse;
         elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse) && ischar(WeightParse{i})
+            % If data structure input is more than 1 and the weight input
+            % is a cell contains the field name of the weights in each data
+            % structure input
             tmpWeightDataset = WeightParse{i};
             Weighttmp = tmpStruct.(tmpDisplDataset).(tmpWeightDataset);
         elseif N ~= 1 && iscell(WeightParse) && ~isempty(WeightParse) && isnumeric(WeightParse{i})
+            % If data structure input is more than 1 and the weight input
+            % are matrices that describe the weight for each data input
             Weighttmp = WeightParse{i};
         end
 
