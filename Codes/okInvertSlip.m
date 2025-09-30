@@ -360,13 +360,13 @@ for i = 1:length(SmoothParam)
 
     dtmp = inv(W)*Displ(:); % Put the weighting here 
     d = [dtmp;zeros(patM,1)];
-    if strcmp(solver,'lsq') && isempty(lb) || isempty(ub)
+    if strcmp(solver,'lsq') && (isempty(lb) || isempty(ub))
         m = A\d;
-    elseif strcmp(solver,'nnlsq') && isempty(lb) || isempty(ub)
+    elseif strcmp(solver,'nnlsq') && (isempty(lb) || isempty(ub))
         m = lsqnonneg(A,d);
-    elseif strcmp(solver,'fnnlsq') && isempty(lb) || isempty(ub)
+    elseif strcmp(solver,'fnnlsq') && (isempty(lb) || isempty(ub))
         m = nnls(A,d);
-    elseif strcmp(solver,'lsq') && ~isempty(lb) || ~isempty(ub)
+    elseif strcmp(solver,'lsq') && (~isempty(lb) || ~isempty(ub))
         m = lsqlin(A,d,[],[],[],[],lb,ub,[]);
     end
     % Calculate resolution matrix
