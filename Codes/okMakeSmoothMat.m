@@ -70,10 +70,12 @@ PatchY = FaultModel.PatchY;
 PatchZ = FaultModel.PatchZ;
 ASpatch = FaultModel.PatchCountStrike;
 ADpatch = FaultModel.PatchCountDip;
+ASpatchsize = FaultModel.AlongStrikePatchSize;
+ADpatchsize = FaultModel.AlongDipPatchSize;
 
 % If the fault model is combined with different patch sizes, then
 % "equidist" will not work
-if (length(ASpatch) > 1 || length(ADpatch) > 1) && strcmp(method,'equidist')
+if any(ASpatchsize ~= ADpatchsize) && strcmp(method,'equidist')
     error(['Combined fault model with different patch sizes does not allow "equidist". '  ...
         'try "dist-based" or "dist-weighted"'])
 end
@@ -93,8 +95,8 @@ SmoothModel = FaultModel;
 if strcmp(method,'equidist')
     for i = 1:Dim
         % From Top-left patch to bottom-right patch
-        ui = i-ASpatch;
-        di = i+ASpatch;
+        ui = i-sum(ASpatch);
+        di = i+sum(ASpatch);
         li = i-1;
         ri = i+1;
     
@@ -104,34 +106,34 @@ if strcmp(method,'equidist')
         % 1. top-left corner
             S(i,ri) = 2;
             S(i,di) = 2;
-        elseif i == ASpatch
+        elseif i == sum(ASpatch)
         % 2. top-right corner
             S(i,li) = 2;
             S(i,di) = 2;
-        elseif i == ASpatch*(ADpatch-1)
+        elseif i == sum(ASpatch.*ADpatch) - sum(ASpatch)
         % 3. bottom-left corner
             S(i,ui) = 2;
             S(i,ri) = 2;
-        elseif i == ASpatch*ADpatch
+        elseif i == sum(ASpatch.*ADpatch)
         % 4. bottom-right corner
             S(i,ui) = 2;
             S(i,li) = 2;
-        elseif i < ASpatch
+        elseif i < sum(ASpatch)
         % 5. top row
             S(i,li) = 1;
             S(i,ri) = 1;
             S(i,di) = 2;
-        elseif i > ASpatch*(ADpatch-1)
+        elseif i > sum(ASpatch.*ADpatch) - sum(ASpatch)
         % 6. bottom row
             S(i,li) = 1;
             S(i,ri) = 1;
             S(i,ui) = 2;
-        elseif mod(i,ASpatch) == 1
+        elseif mod(i,sum(ASpatch)) == 1
         % 7. left column
             S(i,ui) = 1;
             S(i,di) = 1;
             S(i,ri) = 2;
-        elseif mod(i,ASpatch) == 0
+        elseif mod(i,sum(ASpatch)) == 0
         % 8. right column
             S(i,ui) = 1;
             S(i,di) = 1;
