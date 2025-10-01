@@ -591,7 +591,9 @@ elseif strcmp(FigType,'GreenFunc')
     % Check if the input field name exist
     if any(strcmp(fieldnames(DataStruct),dset))
         LocalX = DisplParse.LocalX;
+        LocalX = LocalX(:);
         LocalY = DisplParse.LocalY;
+        LocalY = LocalY(:);
         GreenFunctmp = DataStruct.(dset);
         if isstruct(GreenFunctmp)
             fields = fieldnames(GreenFunctmp);
