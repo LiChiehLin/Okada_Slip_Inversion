@@ -137,8 +137,11 @@ for i = 1:(PatchStrike)*(PatchDip)
     end
     if PatchDip == 1
         % If the down-dip direction only have one patch long
-        XincAD = 0;
-        YincAD = 0;
+        DepthHori = DepthInv/tand(Dip);
+        xdipinc = DepthHori*cosd(Str+90);
+        ydipinc = DepthHori*sind(Str+90);
+        XincAD = xdipinc;
+        YincAD = ydipinc;
         ZincAD = ZPatchDip1;
     else
         XincAD = Nodes(PatchStrike+1,1) - Nodes(1,1);
