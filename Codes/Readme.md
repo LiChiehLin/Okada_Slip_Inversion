@@ -304,16 +304,18 @@ Please be advised that the setting of the Green's function has a impact on fault
 * Slip: ***Numeric.***: Input how much it slips (It can be zero to assume no slip in this rake direction)
 * Opening: ***Numeric.***: Input how much tensile opening it is (It can be zero to assume no opening as a common practice in slip inversion)
 * GreenFuncName. ***Character.***: Input the field name the Green's function is going to be stored in
+#### Name-Value pairs:  
+* 'nu': ***Numeric.***: Input the Poisson's ratio
 ```matlab
 % Dip-slip
 RakeDS = -90;
 SlipDS = 1;
-FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeDS,SlipDS,0,'GreenDS');
+FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeDS,SlipDS,0,'GreenDS','nu',0.25);
 
 % Strike-slip
 RakeSS = 0;
 SlipSS = 1;
-FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS,0,'GreenSS');
+FaultModel = okMakeGreenFunc(DataStruct,'Dsample','LOS',FaultModel,RakeSS,SlipSS,0,'GreenSS','nu',0.25);
 ```
 ---
 
