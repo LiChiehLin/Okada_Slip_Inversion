@@ -49,7 +49,8 @@ default_nu = 0.25;
 addParameter(p,'nu',default_nu, @(x) isnumeric(x));
 
 parse(p, varargin{:});
-nu = p.Results.method;
+nu = p.Results.nu;
+
 
 GreenFunc = FaultModel;
 if strcmp(Direction,'LOS')
@@ -92,7 +93,7 @@ disp(strcat('*** Patch count:',32,num2str(PatchCount)))
 disp(strcat('*** Rake angle:',32,num2str(Rake)))
 disp(strcat('*** Unit slip:',32,num2str(Slip)))
 disp(strcat('*** Unit opening:',32,num2str(Opening)))
-disp(strcat("*** Poisson's ratio:",32,num2str(nu)))
+disp(strcat('*** Poisson ratio:',32,num2str(nu)))
 disp('*********************************')
 
 % Start forwarding Okada
