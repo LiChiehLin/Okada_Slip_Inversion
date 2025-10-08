@@ -2,6 +2,8 @@
 This is a suite of Matlab routines for using InSAR/GNSS data to invert for the fault slip using the Okada solution [(Okada, 1985)](https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782/Surface-deformation-due-to-shear-and-tensile).  
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
+- Update on Oct 08, 2025:  
+  `okMakeGreenFunc.m`: Allows input different Poission's ratio
 - Update on Sep 23, 2025:  
   Add feature on `okPlot.m`. Example shown is smoothing result using ***dist-weighted*** smoothing method
   ![Example](https://github.com/LiChiehLin/Okada_Slip_Inversion/blob/ae5b0f5693ba8d6ed7c6b3d5d17a6ec7c2d22cdc/Figure/okPlot_Smooth_Patch.png)
