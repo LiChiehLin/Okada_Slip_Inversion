@@ -10,6 +10,8 @@
 %             ***            okMakeGreenFunc.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2025.10.08)                                                     %
+% Support inputs of different Poisson's ratio                             %
 % (Update 2025.03.08)                                                     %
 % Support converting to LOS or Azimuth displacement vector                %
 %                                                                         %
@@ -41,7 +43,13 @@
 % 1. GreenFunc: Structure. The Green's function will be stored in the     %
 %    field name put in GreenFuncName                                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function GreenFunc = okMakeGreenFunc(DataStruct,Dataset,Direction,FaultModel,Rake,Slip,Opening,GreenFuncName)
+function GreenFunc = okMakeGreenFunc(DataStruct,Dataset,Direction,FaultModel,Rake,Slip,Opening,GreenFuncName,varargin)
+p = inputParser;
+default_nu = 0.25;
+addParameter(p,'nu',default_nu, @(x) isnumeric(x));
+
+parse(p, varargin{:});
+nu = p.Results.method;
 
 GreenFunc = FaultModel;
 if strcmp(Direction,'LOS')
@@ -84,6 +92,7 @@ disp(strcat('*** Patch count:',32,num2str(PatchCount)))
 disp(strcat('*** Rake angle:',32,num2str(Rake)))
 disp(strcat('*** Unit slip:',32,num2str(Slip)))
 disp(strcat('*** Unit opening:',32,num2str(Opening)))
+disp(strcat("*** Poisson's ratio:",32,num2str(nu)))
 disp('*********************************')
 
 % Start forwarding Okada
@@ -108,7 +117,7 @@ for i = 1:PatchCount
     progressStr = strcat('*** Processing patch: #',Num);
     fprintf([repmat('\b', 1, length(progressStr)), progressStr]);
 
-    [Etmp,Ntmp,Ztmp] = okada85(ObsE-Xct,ObsN-Yct,Zct,Str,Dip,ASlength,ADwidth,Rake,Slip,Opening);
+    [Etmp,Ntmp,Ztmp] = okada85(ObsE-Xct,ObsN-Yct,Zct,Str,Dip,ASlength,ADwidth,Rake,Slip,Opening,nu);
     uE(:,i) = Etmp(:);
     uN(:,i) = Ntmp(:);
     uZ(:,i) = Ztmp(:);
