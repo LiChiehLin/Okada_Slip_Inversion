@@ -10,6 +10,9 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.10.24)                                                    %
+%   Fixing the calculation of resolution matrix                           %
+%                                                                         %
 % (Update: 2025.09.17)                                                    %
 %   Adding different solvers and allowing solving only strike-slip or     %
 %   dip-slip.                                                             %
@@ -370,7 +373,8 @@ for i = 1:length(SmoothParam)
         m = lsqlin(A,d,[],[],[],[],lb,ub,[]);
     end
     % Calculate resolution matrix
-    Resol = (A'*A)\(A'*A);
+    Gresol = [Gtmp,ones(obsN,1)];
+    Resol = inv(A'*A)*(Gresol'*Gresol);
 
     % Calculate seismic moment and moment magnitude
     M0 = sum(m(1:sum(TotalPatchCount)).*PatchSize.*30*10^9);
