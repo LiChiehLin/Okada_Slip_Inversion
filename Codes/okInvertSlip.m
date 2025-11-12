@@ -10,6 +10,10 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.11.12)                                                    %
+%   Allowing solving for tensile deformation (Solving the 3 components    %
+%   of the Okada's model)                                                 %
+%                                                                         %
 % (Update: 2025.10.24)                                                    %
 %   Fixing the calculation of resolution matrix                           %
 %                                                                         %
@@ -271,8 +275,9 @@ for i = 1:N
     % Length of this dataset
     Dlength(i) = length(Displ{i});
 
-    
 end
+
+
 % Calculate the indices of data
 tmp = [0;cumsum(Dlength)];
 for i = 1:N
@@ -308,9 +313,9 @@ end
 Stmp = FaultModel.(SmoothMatDataset);
 SmoothSize = size(Stmp,1);
 if SmoothSize ~= size(G,2)
-    S = zeros(SmoothSize*2);
+    S = zeros(SmoothSize*GC);
     BeginI = 0;
-    EndI = SmoothSize*(1:2);
+    EndI = SmoothSize*(1:GC);
     for i = 1:size(G,2)/size(Stmp,2)
         Ind = (BeginI+1):EndI(i);
         S(Ind,Ind) = Stmp;
@@ -327,18 +332,9 @@ PatchSizetmp = ASPatchSize.*ADPatchSize;
 PatchCount = FaultModel.TotalPatchCount;
 M = length(PatchCount);
 PatchSize = cell(M,1);
-if flagslip2 == 1
-    % Solving both strike-slip and dip-slip
-    TotalPatchCount = sum(PatchCount.*2);
-    for i = 1:M
-        PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i)*2,1);
-    end
-else
-    % Solving only one
-    TotalPatchCount = sum(PatchCount);
-    for i = 1:M
-        PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i),1);
-    end
+TotalPatchCount = sum(PatchCount.*GC);
+for i = 1:M
+    PatchSize{i} = repmat(PatchSizetmp(i),PatchCount(i)*GC,1);
 end
 PatchSize = cell2mat(PatchSize);
 
