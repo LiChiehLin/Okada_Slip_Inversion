@@ -10,6 +10,10 @@
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2025.11.19)                                                    %
+%   Fixed bugs when data has NaN values and the weight input does not     %
+%   adjust accordingly                                                    %
+%                                                                         %
 % (Update: 2025.11.12)                                                    %
 %   Allowing solving for tensile deformation (Solving the 3 components    %
 %   of the Okada's model)                                                 %
@@ -266,7 +270,7 @@ for i = 1:N
         end
 
         % Remove NaN values
-        Weight{i} = Weighttmp(rmNaN,:);
+        Weight{i} = Weighttmp(rmNaN,rmNaN);
 
         % Store data count
         DisplN(i) = size(Weighttmp,1);
@@ -293,16 +297,17 @@ G = cell2mat(G);
 
 % Unpack weighting matrix
 if ~isempty(WeightParse)
-    W = zeros(numel(Displ),numel(Displ));
-    BeginI = 0;
-    for i = 1:length(Weight)
-        Wtmp = Weight{i};
-        EndI = sum(DisplN(1:i));
-        Ind = (BeginI+1):EndI;
+    W = blkdiag(Weight{:});
+    %W = zeros(numel(Displ),numel(Displ));
+    %BeginI = 0;
+    %for i = 1:length(Weight)
+    %    Wtmp = Weight{i};
+    %    EndI = sum(DisplN(1:i));
+    %    Ind = (BeginI+1):EndI;
 
-        W(Ind,Ind) = Wtmp;
-        BeginI = Ind(end);
-    end
+    %    W(Ind,Ind) = Wtmp;
+    %    BeginI = Ind(end);
+    %end
 else
     W = eye(numel(Displ));
 
