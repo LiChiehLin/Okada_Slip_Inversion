@@ -12,6 +12,7 @@
 % (Update: 2025.12.18)                                                    %
 %   Changed how model prediction is calculated. Now it does not take into %
 %   account of the offset value                                           %
+%   Take the absolute value of slip to calculate seismic moment           %
 %                                                                         %
 % (Update: 2025.11.19)                                                    %
 %   Fixed bugs when data has NaN values and the weight input does not     %
