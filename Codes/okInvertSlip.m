@@ -9,6 +9,9 @@
 %             *** Routine for finite fault slip inversion ***             %
 %             ***            okInvertSlip.m               ***             %
 %             ***********************************************             %
+% (Update: 2025.12.18)                                                    %
+%   Changed how model prediction is calculated. Now it does not take into %
+%   account of the offset value                                           %
 %                                                                         %
 % (Update: 2025.11.19)                                                    %
 %   Fixed bugs when data has NaN values and the weight input does not     %
@@ -377,18 +380,19 @@ for i = 1:length(SmoothParam)
     Gresol = [Gtmp,ones(obsN,1)];
     Resol = inv(A'*A)*(Gresol'*Gresol);
 
-    % Calculate seismic moment and moment magnitude
-    M0 = sum(m(1:sum(TotalPatchCount)).*PatchSize.*30*10^9);
+    % Calculate seismic moment and moment magnitude (N-m)
+    M0 = sum(abs(m(1:sum(TotalPatchCount))).*PatchSize.*30*10^9);
     Mw = (2/3)*(log10(M0)-9.1);
 
     % Calculate the residual and prepare for L-curve
-    tmp = [G,ones(obsN,1)]*m;
+    %tmp = [G,ones(obsN,1)]*m;
+    tmp = G*m(1:sum(TotalPatchCount));
     ResNorm = sqrt(sum((inv(W)*(Displ(:) - tmp(1:obsN))).^2));
     SolNorm = sqrt(sum((S*m(1:sum(TotalPatchCount))).^2));
     Pred = tmp(1:obsN);
 
     % Report inversion result
-    avgSlip = mean(m(1:sum(TotalPatchCount)));
+    avgSlip = mean(abs(m(1:sum(TotalPatchCount))));
     disp(strcat('* Average slip:',32,num2str(avgSlip),32,'| Smoothing param:',32,num2str(alpha), ...
         32,'| Solution res:',32,num2str(SolNorm),32,'| Model res.:',32,num2str(ResNorm)))
 
