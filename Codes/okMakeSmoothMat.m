@@ -10,6 +10,9 @@
 %             ***            okMakeSmoothMat.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2026.01.09)                                                    %
+%  Fix some character and string variable concatenation issues            %
+%  Add verbosity I/O feature                                              %
 % (Update: 2025.09.26)                                                    %
 %  'dist-based': if cannot find patches within the distance, then smooth  %
 %  it with its connecting patches                                         %
@@ -48,15 +51,17 @@ p = inputParser;
 default_method = 'equidist';
 default_dist = [];
 default_tol = 1e-3;
-addParameter(p,'method',default_method, @(x) ischar(x) && (strcmp(x,'equidist') || strcmp(x,'dist-weighted') || strcmp(x,'dist-based')));
+default_verbose = true;
+addParameter(p,'method',default_method, @(x) ischar(x) || isstring(x) && (strcmp(x,'equidist') || strcmp(x,'dist-weighted') || strcmp(x,'dist-based')));
 addParameter(p,'dist',default_dist, @(x) isnumeric(x));
 addParameter(p,'tol',default_tol, @(x) isnumeric(x));
-
+addParameter(p,'verbose',default_verbose, @(x) islogical(x));
 
 parse(p, varargin{:});
 method = p.Results.method;
 dist = p.Results.dist;
 tol = p.Results.tol;
+verboseIO = p.Results.verbose;
 
 % Check if "dist-based" option is put without the distance parameter
 if strcmp(method,'dist-based') && isempty(dist)
@@ -83,11 +88,12 @@ end
 % Smoothing function
 smFunc = method;
 
-disp(' ')
-disp("******* Constructing smoothing matrix okMakeSmoothMat.m *******")
-disp(strcat('*** Smoothing function:',32,smFunc))
-disp(strcat('*** Tolerance:',32,num2str(tol)))
-
+if verboseIO == true
+    disp(' ')
+    disp("******* Constructing smoothing matrix okMakeSmoothMat.m *******")
+    disp(append('*** Smoothing function:',' ',smFunc))
+    disp(append('*** Tolerance:',' ',num2str(tol)))
+end
 
 Dim = okFault(end,8);
 S = zeros(Dim);
@@ -359,6 +365,5 @@ end
 SmoothModel.SmoothMat = S;
 
 end
-
 
 
