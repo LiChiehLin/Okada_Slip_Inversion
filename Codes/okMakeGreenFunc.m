@@ -10,6 +10,9 @@
 %             ***            okMakeGreenFunc.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update 2026.01.08)                                                     %
+% Support generating Green's function with checkboard style slip/opening  %
+% pattern                                                                 %
 % (Update 2025.10.08)                                                     %
 % Support inputs of different Poisson's ratio                             %
 % (Update 2025.03.08)                                                     %
@@ -46,11 +49,19 @@
 function GreenFunc = okMakeGreenFunc(DataStruct,Dataset,Direction,FaultModel,Rake,Slip,Opening,GreenFuncName,varargin)
 p = inputParser;
 default_nu = 0.25;
+default_checkerSlip = false;
+default_checkerOpen = false;
+default_verbose = true;
 addParameter(p,'nu',default_nu, @(x) isnumeric(x));
+addParameter(p,'checkerSlip',default_checkerSlip, @(x) islogical(x));
+addParameter(p,'checkerOpen',default_checkerOpen, @(x) islogical(x));
+addParameter(p,'verbose',default_verbose, @(x) islogical(x));
 
 parse(p, varargin{:});
 nu = p.Results.nu;
-
+checkerSlipIO = p.Results.checkerSlip;
+checkerOpenIO = p.Results.checkerOpen;
+verboseIO = p.Results.verbose;
 
 GreenFunc = FaultModel;
 if strcmp(Direction,'LOS')
@@ -84,17 +95,21 @@ okFault = FaultModel.okFault;
 
 % Report the attributes
 PatchCount = size(okFault,1);
-disp(' ')
-disp("******* Constructing Green's function okMakeGreenFunc.m *******")
-if flag == 1
-    disp(strcat('*** Convert Green func to:',32,Direction,32,'direction'))
+if verboseIO == true
+    disp(' ')
+    disp("******* Constructing Green's function okMakeGreenFunc.m *******")
+    if flag == 1
+        disp(strcat('*** Convert Green func to:',32,Direction,32,'direction'))
+    end
+    disp(strcat('*** Patch count:',32,num2str(PatchCount)))
+    disp(strcat('*** Rake angle:',32,num2str(Rake)))
+    disp(strcat('*** Unit slip:',32,num2str(Slip)))
+    disp(strcat('*** Unit opening:',32,num2str(Opening)))
+    disp(strcat('*** Poisson ratio:',32,num2str(nu)))
+    disp(strcat('*** Checkerboard slip:',32,num2str(checkerSlipIO)))
+    disp(strcat('*** Checkerboard opening:',32,num2str(checkerOpenIO)))
+    disp('*********************************')
 end
-disp(strcat('*** Patch count:',32,num2str(PatchCount)))
-disp(strcat('*** Rake angle:',32,num2str(Rake)))
-disp(strcat('*** Unit slip:',32,num2str(Slip)))
-disp(strcat('*** Unit opening:',32,num2str(Opening)))
-disp(strcat('*** Poisson ratio:',32,num2str(nu)))
-disp('*********************************')
 
 % Start forwarding Okada
 [Row,Col] = size(ObsE);
@@ -103,7 +118,27 @@ uN = zeros(Row*Col,PatchCount);
 uZ = zeros(Row*Col,PatchCount);
 digit = length(num2str(PatchCount));
 progressStr = strcat('*** Processing patch: #',repmat('0',1,digit));
-fprintf(progressStr)
+if verboseIO == true
+    fprintf(progressStr)
+end
+
+
+% Check if using checkerboard style of slip and opening
+if checkerSlipIO == true
+    SlipIO = okBuildCheckerIO(FaultModel);
+    SlipIO = Slip.*SlipIO;
+else
+    SlipIO = Slip*ones(PatchCount,1);
+end
+
+if checkerOpenIO == true
+    OpenIO = okBuildCheckerIO(FaultModel);
+    OpenIO = Opening.*OpenIO;
+else
+    OpenIO = Opening*ones(PatchCount,1);
+end
+
+% Generate Green's function
 for i = 1:PatchCount
     Xct = okFault(i,1);
     Yct = okFault(i,2);
@@ -114,17 +149,21 @@ for i = 1:PatchCount
     ADwidth = okFault(i,7);
 
     % Execute okada85.m
-    Num = strcat(repmat('0',1,digit-length(num2str(i))),num2str(i));
-    progressStr = strcat('*** Processing patch: #',Num);
-    fprintf([repmat('\b', 1, length(progressStr)), progressStr]);
+    if verboseIO == true
+        Num = strcat(repmat('0',1,digit-length(num2str(i))),num2str(i));
+        progressStr = strcat('*** Processing patch: #',Num);
+        fprintf([repmat('\b', 1, length(progressStr)), progressStr]);
+    end
 
-    [Etmp,Ntmp,Ztmp] = okada85(ObsE-Xct,ObsN-Yct,Zct,Str,Dip,ASlength,ADwidth,Rake,Slip,Opening,nu);
+    [Etmp,Ntmp,Ztmp] = okada85(ObsE-Xct,ObsN-Yct,Zct,Str,Dip,ASlength,ADwidth,Rake,SlipIO(i),OpenIO(i),nu);
     uE(:,i) = Etmp(:);
     uN(:,i) = Ntmp(:);
     uZ(:,i) = Ztmp(:);
 
 end
-fprintf('\n')
+if verboseIO == true
+    fprintf('\n')
+end
 
 if flag == 1
     GreenLOS = zeros(Row*Col,PatchCount);
@@ -170,9 +209,8 @@ else
 
 end
 
-
+% Store the Slip/Opening I/O
+GreenFunc.SlipIO = SlipIO;
+GreenFunc.OpenIO = OpenIO;
 end
-
-
-
 
