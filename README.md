@@ -2,6 +2,8 @@
 This is a suite of Matlab routines for using InSAR/GNSS data to invert for the fault slip using the Okada solution [(Okada, 1985)](https://pubs.geoscienceworld.org/ssa/bssa/article/75/4/1135/118782/Surface-deformation-due-to-shear-and-tensile).  
 The fundamental Okada solution is from **François Beauducel** [okada85.m](https://github.com/IPGP/deformation-lib/tree/master/okada).  I DON'T own any credit of the creation of okada85.m.  
 
+- Update on Mar 03, 2026:  
+  `okBuildCheckerIO.m`: Sub-routine for `okMakeGreenFunc.m` to make checker board style Green's functions.
 - Update on Oct 08, 2025:  
   `okMakeGreenFunc.m`: Allows input different Poission's ratio
 - Update on Sep 23, 2025:  
