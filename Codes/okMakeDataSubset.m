@@ -10,6 +10,8 @@
 %             ***           okMakeDataSubset.m            ***             %
 %             ***********************************************             %
 %                                                                         %
+% (Update: 2026.09.15)                                                    %
+% Also make subset on for coherence
 % (Update: 2025.12.17)                                                    %
 % Update on cropping data when the data was not read in. Prevents this    %
 % routine from not working properly                                       %
@@ -107,6 +109,17 @@ if any(strcmp(fieldnames(DataStruct.(Dataset)),'Geometry'))
         disp('*** Skipping making subset of Geometry')
     end
 end
+if any(strcmp(fieldnames(DataStruct.(Dataset)),'Coherence'))
+    [r,c] = size(DataStruct.(Dataset).Coherence);
+    if (r > 1) || (c > 1)
+        Coherence = DataStruct.(Dataset).Coherence;
+        CoherenceSub = Coherence(rmin:rmax,cmin:cmax);
+        disp('*** Making subset of Coherence')
+        DataSubset.Subset.Coherence = CoherenceSub;
+    else
+        disp('*** Skipping making subset of Coherence')
+    end
+end
 
 % Store the subset index boundaries
 DataSubset.Subset.Boundaries = [rmin,rmax,cmin,cmax];
@@ -116,4 +129,5 @@ disp('**************************************')
 disp(strcat('Subset size:',32,num2str(rmax-rmin+1),32,num2str(cmax-cmin+1)))
 disp(' ')
 end
+
 
