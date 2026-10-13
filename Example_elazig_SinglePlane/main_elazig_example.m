@@ -50,7 +50,7 @@ PatchDip = 8;
 FaultModel = okMakeFaultModel(StartXYZ,Length,Width,Strike,Dip,PatchStrike,PatchDip);
 
 %% Make Green's function (okMakeGreenFunc.m)
-RakeDS = -90;
+RakeDS = 90;
 RakeSS = 0;
 SlipDS = 1;
 SlipSS = 1;
